@@ -35,7 +35,7 @@ All yours prompts are stored locally in your browser - with optional export and 
 
 You can download the latest version from the Releases page:
 
-👉 https://github.com/thejohnd0e/SimplestPrompt/releases
+👉 https://github.com/thejohnd0e/SimplestPrompt/releases/latest
 
 
 ## Installation (Developer Mode)
