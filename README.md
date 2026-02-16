@@ -1,6 +1,6 @@
-# Pr
+# SimplestPrompt
 
-Pr is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
+SimplestPrompt is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
 
 All data is local. No account, no cloud sync, no backend.
 
@@ -37,7 +37,7 @@ All data is local. No account, no cloud sync, no backend.
 1. Click the extension icon to open the side panel.
 2. Add a folder and prompts.
 3. On any regular website tab, right-click in a page or input field.
-4. Choose `Pr`, then a folder and prompt.
+4. Choose `SimplestPrompt`, then a folder and prompt.
 5. If auto-paste is enabled, the prompt is inserted into the target field; otherwise it is copied to the clipboard.
 
 ## Data Model
