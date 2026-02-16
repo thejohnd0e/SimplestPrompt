@@ -7,7 +7,7 @@ All data is local. No account, no cloud sync, no backend.
 ## Features
 
 - Save prompts in folders.
-- Open prompts from the browser context menu (`Pr -> Folder -> Prompt`).
+- Open prompts from the browser context menu (`SimplestPrompt -> Folder -> Prompt`).
 - Copy prompt text to clipboard.
 - Optional auto-paste into focused input fields.
 - Side panel management UI:

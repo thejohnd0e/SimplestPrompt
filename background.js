@@ -15,7 +15,7 @@ async function saveFolders(folders) {
 
 async function buildContextMenu() {
   await chrome.contextMenus.removeAll();
-  chrome.contextMenus.create({ id: MENU_ROOT, title: 'Pr', contexts: ['all'] });
+  chrome.contextMenus.create({ id: MENU_ROOT, title: 'SimplestPrompt', contexts: ['all'] });
 
   const folders = await getFolders();
   const withPrompts = folders.filter(f => f.prompts && f.prompts.length > 0);
