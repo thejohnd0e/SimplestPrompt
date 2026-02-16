@@ -1,6 +1,6 @@
 # Pr
 
-Pr is a lightweight Chrome/Cent Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
+Pr is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
 
 All data is local. No account, no cloud sync, no backend.
 
