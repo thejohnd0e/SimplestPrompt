@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SimplestPrompt",
-  "version": "1.0.5",
-  "version_name": "1.05",
+  "version": "1.0.7",
+  "version_name": "1.07",
   "description": "Save AI prompts and access them via right-click. Local only - no account, no cloud.",
   "permissions": ["storage", "contextMenus", "clipboardWrite", "sidePanel", "activeTab", "scripting"],
   "action": {
@@ -24,3 +24,4 @@
     "128": "icons/128.png"
   }
 }
+

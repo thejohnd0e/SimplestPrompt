@@ -2,6 +2,7 @@
 
 let folders = [];
 let selectedFolderId = null;
+let dragState = null;
 
 async function loadFolders() {
   const { folders: f } = await chrome.storage.local.get({ folders: [] });
@@ -17,22 +18,24 @@ async function saveFolders() {
 function render() {
   const listEl = document.getElementById('foldersList');
   listEl.innerHTML = '';
-  folders.forEach(f => {
+  folders.forEach((f) => {
     const div = document.createElement('div');
     div.className = 'folder-item' + (f.id === selectedFolderId ? ' active' : '');
     div.dataset.id = f.id;
+    div.draggable = true;
     div.innerHTML = `
       <div class="meta">
         <span class="name">${escapeHtml(f.name || 'Unnamed')}</span>
         <span class="count">${(f.prompts || []).length} prompts</span>
       </div>
-      <button type="button" class="icon-btn" data-edit-folder="${f.id}" title="Rename folder" aria-label="Rename folder">✎</button>
     `;
     div.addEventListener('click', () => selectFolder(f.id));
-    div.querySelector('[data-edit-folder]').addEventListener('click', (e) => {
-      e.stopPropagation();
-      openEditFolderModal(f.id);
-    });
+    div.addEventListener('dblclick', () => openEditFolderModal(f.id));
+    div.addEventListener('dragstart', (e) => onFolderDragStart(e, f.id));
+    div.addEventListener('dragover', onItemDragOver);
+    div.addEventListener('dragleave', onItemDragLeave);
+    div.addEventListener('drop', (e) => onFolderDrop(e, f.id));
+    div.addEventListener('dragend', onItemDragEnd);
     listEl.appendChild(div);
   });
   renderPrompts();
@@ -69,20 +72,27 @@ function renderPrompts() {
     return;
   }
 
-  prompts.forEach(p => {
+  prompts.forEach((p) => {
     const card = document.createElement('div');
     card.className = 'prompt-card';
+    card.dataset.id = p.id;
+    card.draggable = true;
     card.innerHTML = `
       <div class="title">${escapeHtml(p.title || 'Untitled')}</div>
       <div class="text">${escapeHtml((p.text || '').slice(0, 120))}${(p.text || '').length > 120 ? '…' : ''}</div>
       <div class="actions">
         <button type="button" class="btn" data-action="copy" data-id="${p.id}">Copy</button>
-        <div class="actions-right">
-          <button type="button" class="icon-btn" data-action="edit" data-id="${p.id}" title="Edit prompt" aria-label="Edit prompt">✎</button>
-          <button type="button" class="icon-btn danger" data-action="delete" data-id="${p.id}" title="Delete prompt" aria-label="Delete prompt">🗑</button>
-        </div>
       </div>
     `;
+    card.addEventListener('dblclick', (e) => {
+      if (e.target.closest('button')) return;
+      editPrompt(p.id);
+    });
+    card.addEventListener('dragstart', (e) => onPromptDragStart(e, p.id));
+    card.addEventListener('dragover', onItemDragOver);
+    card.addEventListener('dragleave', onItemDragLeave);
+    card.addEventListener('drop', (e) => onPromptDrop(e, p.id));
+    card.addEventListener('dragend', onItemDragEnd);
     listEl.appendChild(card);
   });
 }
@@ -113,11 +123,85 @@ async function copyPrompt(promptId) {
   }
 }
 
-function deletePrompt(promptId) {
-  const folderIndex = folders.findIndex(f => f.id === selectedFolderId);
-  if (folderIndex < 0) return;
-  const current = folders[folderIndex];
-  current.prompts = (current.prompts || []).filter(p => p.id !== promptId);
+function moveArrayItem(list, fromIndex, toIndex) {
+  if (!Array.isArray(list)) return false;
+  if (fromIndex < 0 || toIndex < 0 || fromIndex >= list.length || toIndex >= list.length) return false;
+  if (fromIndex === toIndex) return false;
+  const [moved] = list.splice(fromIndex, 1);
+  list.splice(toIndex, 0, moved);
+  return true;
+}
+
+function clearDragIndicators(selector) {
+  document.querySelectorAll(selector).forEach((el) => {
+    el.classList.remove('drag-over-top', 'drag-over-bottom', 'dragging');
+  });
+}
+
+function onFolderDragStart(e, folderId) {
+  dragState = { type: 'folder', id: folderId };
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+
+function onPromptDragStart(e, promptId) {
+  dragState = { type: 'prompt', id: promptId };
+  e.dataTransfer.effectAllowed = 'move';
+  e.currentTarget.classList.add('dragging');
+}
+
+function onItemDragOver(e) {
+  if (!dragState) return;
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const el = e.currentTarget;
+  const rect = el.getBoundingClientRect();
+  const insertAfter = e.clientY > rect.top + rect.height / 2;
+  el.classList.toggle('drag-over-top', !insertAfter);
+  el.classList.toggle('drag-over-bottom', insertAfter);
+}
+
+function onItemDragLeave(e) {
+  e.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+}
+
+function onItemDragEnd() {
+  dragState = null;
+  clearDragIndicators('.folder-item');
+  clearDragIndicators('.prompt-card');
+}
+
+function getDestinationIndex(currentTarget, sourceIndex, targetIndex, pointerY) {
+  const rect = currentTarget.getBoundingClientRect();
+  const insertAfter = pointerY > rect.top + rect.height / 2;
+  let destinationIndex = targetIndex + (insertAfter ? 1 : 0);
+  if (sourceIndex < destinationIndex) destinationIndex -= 1;
+  return destinationIndex;
+}
+
+function onFolderDrop(e, targetFolderId) {
+  e.preventDefault();
+  onItemDragLeave(e);
+  if (!dragState || dragState.type !== 'folder') return;
+  const sourceIndex = folders.findIndex(f => f.id === dragState.id);
+  const targetIndex = folders.findIndex(f => f.id === targetFolderId);
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const destinationIndex = getDestinationIndex(e.currentTarget, sourceIndex, targetIndex, e.clientY);
+  if (!moveArrayItem(folders, sourceIndex, destinationIndex)) return;
+  saveFolders().then(loadFolders);
+}
+
+function onPromptDrop(e, targetPromptId) {
+  e.preventDefault();
+  onItemDragLeave(e);
+  if (!dragState || dragState.type !== 'prompt') return;
+  const folder = getSelectedFolder();
+  if (!folder || !Array.isArray(folder.prompts)) return;
+  const sourceIndex = folder.prompts.findIndex(p => p.id === dragState.id);
+  const targetIndex = folder.prompts.findIndex(p => p.id === targetPromptId);
+  if (sourceIndex < 0 || targetIndex < 0) return;
+  const destinationIndex = getDestinationIndex(e.currentTarget, sourceIndex, targetIndex, e.clientY);
+  if (!moveArrayItem(folder.prompts, sourceIndex, destinationIndex)) return;
   saveFolders().then(loadFolders);
 }
 
@@ -130,8 +214,6 @@ function handlePromptActionClick(e) {
   const promptId = btn.dataset.id;
   if (!promptId) return;
   if (action === 'copy') copyPrompt(promptId);
-  if (action === 'edit') editPrompt(promptId);
-  if (action === 'delete') deletePrompt(promptId);
 }
 
 function editPrompt(promptId) {
@@ -141,14 +223,16 @@ function editPrompt(promptId) {
   document.getElementById('modalPromptTitle').textContent = 'Edit prompt';
   document.getElementById('promptTitle').value = p.title || '';
   document.getElementById('promptText').value = p.text || '';
-  document.getElementById('modalPrompt').classList.remove('hidden');
   document.getElementById('savePrompt').dataset.editId = promptId;
+  document.getElementById('deletePrompt').classList.remove('hidden');
+  document.getElementById('modalPrompt').classList.remove('hidden');
 }
 
 function openAddFolderModal() {
   document.getElementById('modalFolderTitle').textContent = 'New folder';
   document.getElementById('folderName').value = '';
   document.getElementById('saveFolder').dataset.editFolderId = '';
+  document.getElementById('deleteFolder').classList.add('hidden');
   document.getElementById('modalFolder').classList.remove('hidden');
 }
 
@@ -158,6 +242,7 @@ function openEditFolderModal(folderId) {
   document.getElementById('modalFolderTitle').textContent = 'Edit folder';
   document.getElementById('folderName').value = folder.name || '';
   document.getElementById('saveFolder').dataset.editFolderId = folder.id;
+  document.getElementById('deleteFolder').classList.remove('hidden');
   document.getElementById('modalFolder').classList.remove('hidden');
 }
 
@@ -170,6 +255,7 @@ function openAddPromptModal() {
   document.getElementById('promptTitle').value = '';
   document.getElementById('promptText').value = '';
   document.getElementById('savePrompt').dataset.editId = '';
+  document.getElementById('deletePrompt').classList.add('hidden');
   document.getElementById('modalPrompt').classList.remove('hidden');
 }
 
@@ -190,6 +276,7 @@ function saveFolderFromModal() {
   }
   saveFolders().then(() => {
     document.getElementById('saveFolder').dataset.editFolderId = '';
+    document.getElementById('deleteFolder').classList.add('hidden');
     document.getElementById('modalFolder').classList.add('hidden');
     loadFolders();
   });
@@ -217,6 +304,31 @@ function savePromptFromModal() {
       timestamp: new Date().toISOString()
     });
   }
+  document.getElementById('savePrompt').dataset.editId = '';
+  document.getElementById('deletePrompt').classList.add('hidden');
+  document.getElementById('modalPrompt').classList.add('hidden');
+  saveFolders().then(loadFolders);
+}
+
+function deleteFolderFromModal() {
+  const editFolderId = document.getElementById('saveFolder').dataset.editFolderId;
+  if (!editFolderId) return;
+  folders = folders.filter(f => f.id !== editFolderId);
+  if (selectedFolderId === editFolderId) selectedFolderId = null;
+  document.getElementById('saveFolder').dataset.editFolderId = '';
+  document.getElementById('deleteFolder').classList.add('hidden');
+  document.getElementById('modalFolder').classList.add('hidden');
+  saveFolders().then(loadFolders);
+}
+
+function deletePromptFromModal() {
+  const promptId = document.getElementById('savePrompt').dataset.editId;
+  if (!promptId) return;
+  const folder = getSelectedFolder();
+  if (!folder) return;
+  folder.prompts = (folder.prompts || []).filter(p => p.id !== promptId);
+  document.getElementById('savePrompt').dataset.editId = '';
+  document.getElementById('deletePrompt').classList.add('hidden');
   document.getElementById('modalPrompt').classList.add('hidden');
   saveFolders().then(loadFolders);
 }
@@ -283,10 +395,18 @@ function renderVersion() {
 
 document.getElementById('addFolder').addEventListener('click', openAddFolderModal);
 document.getElementById('addPrompt').addEventListener('click', openAddPromptModal);
-document.getElementById('cancelFolder').addEventListener('click', () => document.getElementById('modalFolder').classList.add('hidden'));
+document.getElementById('cancelFolder').addEventListener('click', () => {
+  document.getElementById('deleteFolder').classList.add('hidden');
+  document.getElementById('modalFolder').classList.add('hidden');
+});
 document.getElementById('saveFolder').addEventListener('click', saveFolderFromModal);
-document.getElementById('cancelPrompt').addEventListener('click', () => document.getElementById('modalPrompt').classList.add('hidden'));
+document.getElementById('deleteFolder').addEventListener('click', deleteFolderFromModal);
+document.getElementById('cancelPrompt').addEventListener('click', () => {
+  document.getElementById('deletePrompt').classList.add('hidden');
+  document.getElementById('modalPrompt').classList.add('hidden');
+});
 document.getElementById('savePrompt').addEventListener('click', savePromptFromModal);
+document.getElementById('deletePrompt').addEventListener('click', deletePromptFromModal);
 
 document.getElementById('exportBtn').addEventListener('click', exportToJson);
 document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());

@@ -30,7 +30,8 @@
       line-height: 1.4;
       background: var(--bg-main);
       color: var(--text-primary);
-      min-height: 100vh;
+      height: 100vh;
+      overflow: hidden;
       display: flex;
       flex-direction: column;
     }
@@ -40,7 +41,7 @@
       background: var(--bg-header);
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-start;
       flex-shrink: 0;
     }
     .header h1 { margin: 0; font-size: 18px; font-weight: 600; letter-spacing: -0.01em; }
@@ -65,7 +66,6 @@
       outline: 2px solid var(--focus);
       outline-offset: 1px;
     }
-    .header-btns { display: flex; gap: 8px; }
     .toolbar {
       padding: 9px 12px;
       border-bottom: 1px solid var(--border);
@@ -76,6 +76,23 @@
       flex-wrap: wrap;
       gap: 10px;
     }
+    .hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 8px 12px 10px;
+      border-top: 1px solid var(--border);
+      background: var(--bg-header);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+    .hint a {
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .hint a:hover { color: var(--text-primary); text-decoration: underline; }
     .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: var(--text-secondary); }
     .toggle-row input {
       cursor: pointer;
@@ -83,11 +100,12 @@
       height: 14px;
       accent-color: #8a8a8a;
     }
-    .toolbar-btns { display: flex; gap: 8px; }
+    .toolbar-btns { display: flex; gap: 8px; margin-left: auto; }
     .layout {
       display: flex;
       flex: 1;
       min-height: 0;
+      overflow: hidden;
     }
     .folders {
       width: 156px;
@@ -100,37 +118,22 @@
     .folder-item {
       padding: 9px 10px;
       border-radius: var(--radius-sm);
-      cursor: pointer;
+      cursor: grab;
       margin-bottom: 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 6px;
     }
+    .folder-item:active { cursor: grabbing; }
     .folder-item:hover { background: var(--bg-hover); }
     .folder-item.active { background: var(--bg-active); color: var(--text-primary); }
+    .folder-item.dragging { opacity: 0.45; }
+    .folder-item.drag-over-top { box-shadow: inset 0 2px 0 #7a7a7a; }
+    .folder-item.drag-over-bottom { box-shadow: inset 0 -2px 0 #7a7a7a; }
     .folder-item .meta { min-width: 0; flex: 1; }
     .folder-item .name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
     .folder-item .count { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-    .icon-btn {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      cursor: pointer;
-      border-radius: 6px;
-      width: 22px;
-      height: 22px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      font-size: 13px;
-      line-height: 1;
-      flex-shrink: 0;
-    }
-    .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .icon-btn.danger { color: var(--danger); }
-    .icon-btn.danger:hover { background: var(--danger-bg); color: #ffffff; }
     .content {
       flex: 1;
       background: var(--bg-main);
@@ -145,7 +148,12 @@
       margin-bottom: 10px;
       border: 1px solid var(--border);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02);
+      cursor: grab;
     }
+    .prompt-card:active { cursor: grabbing; }
+    .prompt-card.dragging { opacity: 0.45; }
+    .prompt-card.drag-over-top { box-shadow: inset 0 2px 0 #7a7a7a; }
+    .prompt-card.drag-over-bottom { box-shadow: inset 0 -2px 0 #7a7a7a; }
     .prompt-card .title { font-weight: 600; margin-bottom: 5px; font-size: 13px; }
     .prompt-card .text {
       font-size: 12px;
@@ -161,24 +169,8 @@
       margin-top: 10px;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       gap: 8px;
-    }
-    .prompt-card .actions-right {
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      margin-left: auto;
-    }
-    .prompt-card .icon-btn {
-      color: var(--text-secondary);
-      width: 20px;
-      height: 20px;
-      font-size: 12px;
-    }
-    .prompt-card .icon-btn:hover {
-      background: var(--bg-hover);
-      color: #ffffff;
     }
     .empty { color: var(--text-muted); text-align: center; padding: 28px 24px; }
     .modal {
@@ -217,6 +209,13 @@
     }
     .modal-inner textarea { min-height: 100px; resize: vertical; }
     .modal-inner .buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .modal-inner .buttons .left { margin-right: auto; }
+    .btn.danger {
+      background: #2a1a1a;
+      color: #f0b3b3;
+      border-color: #7a3a3a;
+    }
+    .btn.danger:hover { background: #3a2020; }
     .folders::-webkit-scrollbar, .content::-webkit-scrollbar { width: 10px; }
     .folders::-webkit-scrollbar-thumb, .content::-webkit-scrollbar-thumb {
       background: #3c3c3c;
@@ -231,10 +230,6 @@
 <body>
   <div class="header">
     <h1>SimplestPrompt <span class="version" id="appVersion">(v)</span></h1>
-    <div class="header-btns">
-      <button type="button" class="btn" id="addFolder">+ Folder</button>
-      <button type="button" class="btn" id="addPrompt">+ Prompt</button>
-    </div>
   </div>
   <div class="toolbar">
     <label class="toggle-row">
@@ -242,8 +237,10 @@
       <span>Auto-paste into focused field</span>
     </label>
     <div class="toolbar-btns">
-      <button type="button" class="btn ghost" id="exportBtn">Export JSON</button>
-      <button type="button" class="btn ghost" id="importBtn">Import JSON</button>
+      <button type="button" class="btn" id="exportBtn">Export</button>
+      <button type="button" class="btn" id="importBtn">Import</button>
+      <button type="button" class="btn" id="addFolder">+ Folder</button>
+      <button type="button" class="btn" id="addPrompt">+ Prompt</button>
       <input type="file" id="importFile" accept=".json,application/json" class="hidden" />
     </div>
   </div>
@@ -254,12 +251,17 @@
       <div id="promptsList" class="hidden"></div>
     </div>
   </div>
+  <div class="hint">
+    <span>Drag and drop to arrange. Double-click to edit.</span>
+    <a href="https://github.com/thejohnd0e/SimplestPrompt" target="_blank" rel="noopener noreferrer">GitHub</a>
+  </div>
 
   <div id="modalFolder" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalFolderTitle">New folder</h3>
       <input type="text" id="folderName" placeholder="Folder name" />
       <div class="buttons">
+        <button type="button" class="btn danger left hidden" id="deleteFolder">Delete</button>
         <button type="button" class="btn ghost" id="cancelFolder">Cancel</button>
         <button type="button" class="btn" id="saveFolder">Save</button>
       </div>
@@ -271,6 +273,7 @@
       <input type="text" id="promptTitle" placeholder="Title" />
       <textarea id="promptText" placeholder="Prompt text"></textarea>
       <div class="buttons">
+        <button type="button" class="btn danger left hidden" id="deletePrompt">Delete</button>
         <button type="button" class="btn ghost" id="cancelPrompt">Cancel</button>
         <button type="button" class="btn" id="savePrompt">Save</button>
       </div>
