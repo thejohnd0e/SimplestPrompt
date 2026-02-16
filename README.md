@@ -6,8 +6,7 @@
 
 
 SimplestPrompt is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
-
-All data is local. No account, no cloud sync, no backend.
+No account or sign-in required. All prompts are stored locally in your browser — with optional export and import support.
 
 ## Features
 
