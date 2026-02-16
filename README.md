@@ -29,6 +29,13 @@ All data is local. No account, no cloud sync, no backend.
 - Side panel UI (`sidepanel.html`, `sidepanel.js`)
 - Local persistence with `chrome.storage.local`
 
+## Download
+
+You can download the latest version from the Releases page:
+
+👉 https://github.com/thejohnd0e/SimplestPrompt/releases
+
+
 ## Installation (Developer Mode)
 
 1. Open `chrome://extensions`.
