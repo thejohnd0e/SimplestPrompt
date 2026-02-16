@@ -99,10 +99,6 @@ Example folder item:
 - Browser-internal pages like `chrome://*`, `about:*`, `edge://*` cannot be scripted by extensions.
 - Some sites with restrictive CSP or custom editors may limit insertion behavior.
 
-## Versioning
-
-- Internal extension version: `1.0.5`
-- Display version in UI: `1.05`
 
 ## License
 
