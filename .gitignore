@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Node / package managers (if added later)
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Build/temp artifacts
+dist/
+build/
+coverage/
+.tmp/
+temp/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# Archive outputs
+*.zip

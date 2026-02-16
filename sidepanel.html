@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pr</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-size: 13px;
+      background: #0f172a;
+      color: #e2e8f0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .header {
+      padding: 12px 14px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .header h1 { margin: 0; font-size: 16px; font-weight: 600; }
+    .header .version { color: #94a3b8; font-weight: 500; margin-left: 4px; }
+    .btn {
+      background: #3b82f6;
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .btn:hover { background: #2563eb; }
+    .btn.ghost { background: transparent; color: #94a3b8; }
+    .btn.ghost:hover { background: #1e293b; color: #e2e8f0; }
+    .btn.danger:hover { background: #b91c1c; }
+    .header-btns { display: flex; gap: 6px; }
+    .toolbar {
+      padding: 8px 14px;
+      border-bottom: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .toggle-row { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; color: #94a3b8; }
+    .toggle-row input { cursor: pointer; }
+    .toolbar-btns { display: flex; gap: 6px; }
+    .layout {
+      display: flex;
+      flex: 1;
+      min-height: 0;
+    }
+    .folders {
+      width: 140px;
+      border-right: 1px solid #334155;
+      padding: 8px;
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+    .folder-item {
+      padding: 8px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .folder-item:hover { background: #1e293b; }
+    .folder-item.active { background: #1e3a5f; color: #93c5fd; }
+    .folder-item .meta { min-width: 0; flex: 1; }
+    .folder-item .name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .folder-item .count { font-size: 11px; color: #64748b; }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      border-radius: 4px;
+      width: 22px;
+      height: 22px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 13px;
+      line-height: 1;
+      flex-shrink: 0;
+    }
+    .icon-btn:hover { background: #334155; color: #e2e8f0; }
+    .icon-btn.danger { color: #fca5a5; }
+    .icon-btn.danger:hover { background: #7f1d1d; color: #ffffff; }
+    .content {
+      flex: 1;
+      padding: 12px;
+      overflow-y: auto;
+      min-width: 0;
+    }
+    .prompt-card {
+      background: #1e293b;
+      border-radius: 8px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      border: 1px solid #334155;
+    }
+    .prompt-card .title { font-weight: 600; margin-bottom: 4px; }
+    .prompt-card .text {
+      font-size: 12px;
+      color: #94a3b8;
+      max-height: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+    .prompt-card .actions {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .prompt-card .actions-right {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-left: auto;
+    }
+    .prompt-card .icon-btn {
+      color: #cbd5e1;
+      width: 20px;
+      height: 20px;
+      font-size: 12px;
+    }
+    .prompt-card .icon-btn:hover {
+      background: #334155;
+      color: #ffffff;
+    }
+    .empty { color: #64748b; text-align: center; padding: 24px; }
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 16px;
+    }
+    .modal-inner {
+      background: #1e293b;
+      border-radius: 10px;
+      padding: 16px;
+      width: 100%;
+      max-width: 360px;
+      border: 1px solid #334155;
+    }
+    .modal-inner h3 { margin: 0 0 12px; font-size: 14px; }
+    .modal-inner input, .modal-inner textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 6px;
+      border: 1px solid #475569;
+      background: #0f172a;
+      color: #e2e8f0;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .modal-inner textarea { min-height: 100px; resize: vertical; }
+    .modal-inner .buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Pr <span class="version" id="appVersion">(v)</span></h1>
+    <div class="header-btns">
+      <button type="button" class="btn" id="addFolder">+ Folder</button>
+      <button type="button" class="btn" id="addPrompt">+ Prompt</button>
+    </div>
+  </div>
+  <div class="toolbar">
+    <label class="toggle-row">
+      <input type="checkbox" id="autoPaste" />
+      <span>Auto-paste into focused field</span>
+    </label>
+    <div class="toolbar-btns">
+      <button type="button" class="btn ghost" id="exportBtn">Export JSON</button>
+      <button type="button" class="btn ghost" id="importBtn">Import JSON</button>
+      <input type="file" id="importFile" accept=".json,application/json" class="hidden" />
+    </div>
+  </div>
+  <div class="layout">
+    <div class="folders" id="foldersList"></div>
+    <div class="content" id="content">
+      <div class="empty" id="emptyState">Select a folder or add one.</div>
+      <div id="promptsList" class="hidden"></div>
+    </div>
+  </div>
+
+  <div id="modalFolder" class="modal hidden">
+    <div class="modal-inner">
+      <h3 id="modalFolderTitle">New folder</h3>
+      <input type="text" id="folderName" placeholder="Folder name" />
+      <div class="buttons">
+        <button type="button" class="btn ghost" id="cancelFolder">Cancel</button>
+        <button type="button" class="btn" id="saveFolder">Save</button>
+      </div>
+    </div>
+  </div>
+  <div id="modalPrompt" class="modal hidden">
+    <div class="modal-inner">
+      <h3 id="modalPromptTitle">New prompt</h3>
+      <input type="text" id="promptTitle" placeholder="Title" />
+      <textarea id="promptText" placeholder="Prompt text"></textarea>
+      <div class="buttons">
+        <button type="button" class="btn ghost" id="cancelPrompt">Cancel</button>
+        <button type="button" class="btn" id="savePrompt">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
