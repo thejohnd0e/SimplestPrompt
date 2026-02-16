@@ -41,8 +41,7 @@ You can download the latest version from the Releases page:
 1. Open `chrome://extensions`.
 2. Enable **Developer mode**.
 3. Click **Load unpacked**.
-4. Select this project folder.
-5. Reload the extension after code changes.
+4. Select this project unpacked folder.
 
 ## Usage
 
