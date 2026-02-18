@@ -1,17 +1,15 @@
 # SimplestPrompt
 
-SimplestPrompt — lightweight Chrome Browser extension
+SimplestPrompt — lightweight Chrome Browser extension <br>
 
-Your Prompts + Instant AI on Selected Text
-
-Stop copying & pasting the same prompts into ChatGPT, Claude, Grok, Gemini over and over.
-
-Select any text on a page → right-click → Instant AI on Selection → pick a prompt template (e.g. “Translate”, “Explain like I’m 5”, “Rewrite better”, “Critique”, “Summarize”) → instantly opens your chosen AI with the text already inserted and your prompt ready
-Works with ChatGPT, Grok, Claude, Gemini, Perplexity — and you can easily add any other AI you use
-Classic mode still there: save your go-to prompts → they appear in the right-click menu → one click to copy or auto-paste anywhere
-Everything stays 100% local in your browser — no account, no cloud, no tracking
-Folders + drag-and-drop sorting
-Export / import everything in one JSON file
+Your Prompts + Instant AI on Selected Text <br>
+Stop copying & pasting the same prompts into ChatGPT, Claude, Grok, Gemini over and over.<br>
+Select any text on a page → right-click → Instant AI on Selection → pick a prompt template (e.g. “Translate”, “Explain like I’m 5”, “Rewrite better”, “Critique”, “Summarize”) → instantly opens your chosen AI with the text already inserted and your prompt ready <br>
+Works with ChatGPT, Grok, Claude, Gemini, Perplexity — and you can easily add any other AI you use <br>
+Classic mode still there: save your go-to prompts → they appear in the right-click menu → one click to copy or auto-paste anywhere <br>
+Everything stays 100% local in your browser — no account, no cloud, no tracking<br>
+Folders + drag-and-drop sorting<br>
+Export / import everything in one JSON file<br>
 
 Perfect for: quick translations, rewriting posts, summarizing articles, analyzing comments, improving your own text… all in one right-click.
 
