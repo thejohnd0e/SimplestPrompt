@@ -1,10 +1,11 @@
 {
   "manifest_version": 3,
   "name": "SimplestPrompt",
-  "version": "1.0.7",
-  "version_name": "1.07",
+  "version": "2.0.1",
+  "version_name": "2.01",
   "description": "Save AI prompts and access them via right-click. Local only - no account, no cloud.",
   "permissions": ["storage", "contextMenus", "clipboardWrite", "sidePanel", "activeTab", "scripting"],
+  "host_permissions": ["https://gemini.google.com/*"],
   "action": {
     "default_icon": {
       "16": "icons/16.png",
@@ -15,6 +16,13 @@
   "background": {
     "service_worker": "background.js"
   },
+  "content_scripts": [
+    {
+      "matches": ["https://gemini.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
   "side_panel": {
     "default_path": "sidepanel.html"
   },

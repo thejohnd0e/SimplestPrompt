@@ -6,6 +6,8 @@
 
 SimplestPrompt is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
 
+It also supports **AI on Selection**: select text on any page and send it to your preferred AI service with a one-click prompt template.
+
 No account or sign-in required.
 
 All prompts are stored locally in your browser, with optional export and import support.
@@ -17,11 +19,17 @@ All prompts are stored locally in your browser, with optional export and import 
 - Open prompts from the browser context menu (`SimplestPrompt -> Folder -> Prompt`).
 - Copy prompt text to clipboard.
 - Optional auto-paste into focused input fields.
+- **AI on Selection**:
+  - Separate context menu (`AI on Selection`) appears only when text is selected.
+  - Two-level menu: Selection Prompt -> AI Target.
+  - Works with ChatGPT, Grok, Claude, Gemini, Perplexity, and custom targets.
+  - Supports query parameter URLs or paste fallback.
 - Side panel management UI:
   - Create folders and prompts.
   - Edit folders and prompts with double-click.
   - Delete folders and prompts from edit dialogs.
   - Import/export prompts as JSON.
+  - AI on Selection tab with enable toggle, AI Targets, Selection Prompts, and import/export.
 - Dynamic context menu rebuild after content updates.
 
 ## Tech Stack
@@ -30,6 +38,7 @@ All prompts are stored locally in your browser, with optional export and import 
 - Service worker background script (`background.js`)
 - Side panel UI (`sidepanel.html`, `sidepanel.js`)
 - Local persistence with `chrome.storage.local`
+- Gemini content injection via content script (`content.js`)
 
 ## Download
 
@@ -53,6 +62,7 @@ You can download the latest version from the Releases page:
 5. On any regular website tab, right-click in a page or input field.
 6. Choose `SimplestPrompt`, then a folder and prompt.
 7. If auto-paste is enabled, the prompt is inserted into the target field; otherwise it is copied to the clipboard.
+8. For AI on Selection: select text, right-click, choose `AI on Selection -> [Selection Prompt] -> [AI Target]`.
 
 ## Data Model
 
@@ -60,6 +70,9 @@ Stored in `chrome.storage.local`:
 
 - `folders`: array of folder objects.
 - `autoPaste`: boolean toggle for auto-insert behavior.
+- `aiOnSelectionEnabled`: enable/disable AI on Selection menu.
+- `aiTargets`: list of AI targets (name, base URL, query param, paste fallback).
+- `selectionPrompts`: list of selection prompt templates using `{{text}}`.
 
 Example folder item:
 
@@ -78,12 +91,36 @@ Example folder item:
 }
 ```
 
+Example AI target:
+
+```json
+{
+  "id": "uuid",
+  "name": "Gemini",
+  "baseUrl": "https://gemini.google.com/app",
+  "queryParam": "",
+  "usePasteFallback": true
+}
+```
+
+Example selection prompt:
+
+```json
+{
+  "id": "uuid",
+  "name": "Translate to Russian",
+  "template": "Переведи на русский, сохраняя стиль и тон:\\n\\n{{text}}",
+  "timestamp": "2026-02-16T00:00:00.000Z"
+}
+```
+
 ## Project Structure
 
 - `manifest.json`: extension metadata, permissions, icons, entrypoints
 - `background.js`: context menu, clipboard and auto-paste flow
 - `sidepanel.html`: side panel layout and styles
 - `sidepanel.js`: side panel state and interactions
+- `content.js`: Gemini paste helper content script
 - `icons/`: extension icons (16, 48, 128)
 
 ## Permissions
@@ -94,6 +131,7 @@ Example folder item:
 - `sidePanel`: show side panel UI
 - `activeTab`: interact with current tab
 - `scripting`: inject paste helper code into page context
+- `host_permissions`: Gemini content script access
 
 ## Known Limitations
 
