@@ -4,6 +4,12 @@
 
 ![SimplestPrompt Screenshot](assets/screenshot.png)
 
+![SimplestPrompt Screenshot 2](assets/screenshot-2.png)
+
+![SimplestPrompt Screenshot 2](assets/screenshot-3.png)
+
+![SimplestPrompt Screenshot 2](assets/screenshot-4.png)
+
 SimplestPrompt is a lightweight Chrome Browser extension for storing reusable prompts and inserting them quickly from the right-click context menu.
 
 It also supports **AI on Selection**: select text on any page and send it to your preferred AI service with a one-click prompt template.
