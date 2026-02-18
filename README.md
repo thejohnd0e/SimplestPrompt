@@ -1,7 +1,9 @@
 # SimplestPrompt
 
 SimplestPrompt — lightweight Chrome Browser extension
+
 Your Prompts + Instant AI on Selected Text
+
 Stop copying & pasting the same prompts into ChatGPT, Claude, Grok, Gemini over and over.
 
 Select any text on a page → right-click → Instant AI on Selection → pick a prompt template (e.g. “Translate”, “Explain like I’m 5”, “Rewrite better”, “Critique”, “Summarize”) → instantly opens your chosen AI with the text already inserted and your prompt ready
