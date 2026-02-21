@@ -256,6 +256,12 @@ async function tryPasteInTab(tabId, text, frameId) {
             return false;
           }
         }
+        function readEditableValue(el) {
+          if (!el) return '';
+          if (el.tagName === 'TEXTAREA' || isTextLikeInput(el)) return el.value || '';
+          if (el.isContentEditable) return el.textContent || '';
+          return '';
+        }
         async function sleep(ms) {
           return new Promise((r) => setTimeout(r, ms));
         }
@@ -363,7 +369,11 @@ async function tryPasteInTab(tabId, text, frameId) {
         }
         function tryPasteWithEvents(el, text) {
           focusAndClick(el);
+          var before = readEditableValue(el);
           var dispatched = dispatchPaste(el, text);
+          var after = readEditableValue(el);
+          if (after !== before) return true;
+          if (el && el.isContentEditable && dispatched === false) return true;
           if (dispatched) return true;
           try {
             if (document.execCommand('paste')) return true;

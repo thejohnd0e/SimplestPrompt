@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SimplestPrompt",
-  "version": "2.0.1",
-  "version_name": "2.01",
+  "version": "2.0.2",
+  "version_name": "2.02",
   "description": "Save AI prompts and access them via right-click. Local only - no account, no cloud.",
   "permissions": ["storage", "contextMenus", "clipboardWrite", "sidePanel", "activeTab", "scripting"],
   "host_permissions": ["https://gemini.google.com/*"],
