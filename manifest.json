@@ -1,11 +1,11 @@
 {
   "manifest_version": 3,
   "name": "SimplestPrompt",
-  "version": "2.0.3",
-  "version_name": "2.03",
-  "description": "Save AI prompts and access them via right-click. Local only - no account, no cloud.",
+  "version": "2.1.0",
+  "version_name": "2.10",
+  "description": "Save AI prompts and access them via right-click. Optional encrypted GitHub Gist sync.",
   "permissions": ["storage", "contextMenus", "clipboardWrite", "sidePanel", "activeTab", "scripting"],
-  "host_permissions": ["https://gemini.google.com/*"],
+  "host_permissions": ["https://gemini.google.com/*", "https://api.github.com/*"],
   "action": {
     "default_icon": {
       "16": "icons/16.png",

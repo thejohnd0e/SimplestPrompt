@@ -334,6 +334,33 @@
       margin-top: 8px;
     }
     .hidden { display: none !important; }
+    .sync-content { flex: 1; min-height: 0; overflow-y: auto; padding: 12px; }
+    .sync-status {
+      background: #203a28;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+    .sync-status .title { color: #b9efc3; font-weight: 600; margin-bottom: 4px; }
+    .sync-status .meta { color: #c9e9ce; font-size: 11px; white-space: pre-wrap; }
+    .sync-status[data-state="idle"] { background: var(--bg-surface); }
+    .sync-status[data-state="idle"] .title { color: var(--text-primary); }
+    .sync-status[data-state="idle"] .meta { color: var(--text-muted); }
+    .sync-status[data-state="error"] { background: #432626; }
+    .sync-status[data-state="error"] .title { color: #ffb6b6; }
+    .sync-status[data-state="error"] .meta { color: #f0caca; }
+    .sync-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .sync-field { display: block; margin-bottom: 10px; }
+    .sync-field span { display: block; color: var(--text-primary); font-size: 12px; margin-bottom: 5px; }
+    .sync-field input { width: 100%; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #161616; color: var(--text-primary); }
+    .sync-field select { width: 100%; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #161616; color: var(--text-primary); }
+    .sync-help { color: var(--text-secondary); font-size: 11px; line-height: 1.45; margin: 4px 0 12px; }
+    .sync-help a { color: #8fc7ff; }
+    .sync-warning { color: #e8c27a; font-size: 11px; line-height: 1.45; margin-top: 10px; }
+    .sync-advanced { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 10px; }
+    .sync-advanced summary { color: var(--text-secondary); cursor: pointer; font-size: 11px; }
+    .sync-advanced[open] summary { margin-bottom: 10px; }
   </style>
 </head>
 <body>
@@ -343,6 +370,7 @@
   <div class="tabs">
     <button type="button" class="tab-btn active" id="tabPromptsBtn" data-tab="prompts">Prompts</button>
     <button type="button" class="tab-btn" id="tabAiBtn" data-tab="ai">AI on Selection</button>
+    <button type="button" class="tab-btn" id="tabSyncBtn" data-tab="sync">Sync</button>
   </div>
 
   <div id="tabPrompts" class="tab-content">
@@ -408,6 +436,50 @@
     </div>
   </div>
 
+  <div id="tabSync" class="tab-content hidden">
+    <div class="sync-content">
+      <h2 style="font-size: 18px; margin: 2px 0 14px;">Syncing</h2>
+      <label class="sync-field"><span>Sync backend</span><select id="syncBackend"><option value="github-gist">GitHub Gist</option></select></label>
+      <label class="sync-field"><span>Sync URL</span><input type="text" id="syncGistId" autocomplete="off" placeholder="Gist URL or ID" /></label>
+      <div class="sync-help"><a href="https://gist.github.com/" target="_blank" rel="noopener noreferrer">Create a secret Gist</a>. Leave empty if you want the extension to create one.</div>
+      <label class="sync-field"><span>Gist token</span><input type="password" id="syncToken" autocomplete="off" placeholder="Token with Gist permission" /></label>
+      <div class="sync-help"><a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer">Create a token</a> and select the <strong>gist</strong> scope.</div>
+      <label class="sync-field"><span>Sync password</span><input type="password" id="syncPassphrase" autocomplete="off" placeholder="Used to encrypt your prompts" /></label>
+      <div class="sync-help">Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.</div>
+      <button type="button" class="btn" id="syncSaveConnection">Enable syncing</button>
+      <button type="button" class="btn" id="syncCreateGist">Create a private Gist</button>
+      <div class="sync-status" id="syncStatus" data-state="idle">
+        <div class="title" id="syncStatusTitle">Sync is not configured</div>
+        <div class="meta" id="syncStatusMeta">Add your Gist token and sync password to get started.</div>
+        <div class="sync-actions">
+          <button type="button" class="btn" id="syncSync">Sync now</button>
+          <button type="button" class="btn danger" id="syncDisconnect">Disconnect</button>
+        </div>
+      </div>
+      <details class="sync-advanced">
+        <summary>Advanced: choose a version manually</summary>
+        <div class="sync-actions">
+          <button type="button" class="btn" id="syncPull">Use remote version</button>
+          <button type="button" class="btn" id="syncPush">Upload local version</button>
+          <button type="button" class="btn" id="syncCheck">Check remote</button>
+        </div>
+      </details>
+    </div>
+    <div class="hint"><span>Manual sync only. Your data stays local unless you enable this.</span><span></span></div>
+  </div>
+
+  <div id="syncConflictModal" class="modal hidden">
+    <div class="modal-inner">
+      <h3 id="syncConflictTitle">Remote changes detected</h3>
+      <div class="empty" id="syncConflictMessage" style="padding: 8px 0;">The Gist changed since the last sync. Choose which version to keep.</div>
+      <div class="buttons">
+        <button type="button" class="btn ghost" id="syncConflictCancel">Cancel</button>
+        <button type="button" class="btn" id="syncConflictRemote">Use remote</button>
+        <button type="button" class="btn" id="syncConflictLocal">Use local</button>
+      </div>
+    </div>
+  </div>
+
   <div id="modalFolder" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalFolderTitle">New folder</h3>
@@ -463,6 +535,7 @@
     </div>
   </div>
 
+  <script src="crypto.js"></script>
   <script src="sidepanel.js"></script>
 </body>
 </html>

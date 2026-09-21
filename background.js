@@ -1,9 +1,90 @@
-/* Right-Click Prompt (Local) - background service worker. No auth, no cloud. */
+/* SimplestPrompt background service worker. Local data plus optional Gist sync. */
 
 const MENU_ROOT = 'rcp_root';
 const AI_MENU_ROOT = 'ai_selection_root';
 const MAX_FOLDERS = 25;
 const MAX_PROMPTS_PER_FOLDER = 30;
+const SYNC_FILE_NAME = 'simplestprompt-data.json';
+
+async function getSyncConfig() {
+  const { syncConfig } = await chrome.storage.local.get({ syncConfig: {} });
+  return syncConfig && typeof syncConfig === 'object' ? syncConfig : {};
+}
+
+async function saveSyncConfig(patch) {
+  const current = await getSyncConfig();
+  const next = { ...current, ...patch };
+  await chrome.storage.local.set({ syncConfig: next });
+  return next;
+}
+
+async function githubApi(path, options = {}) {
+  const config = await getSyncConfig();
+  if (!config.token) throw new Error('GitHub token is not configured.');
+  const response = await fetch('https://api.github.com' + path, {
+    ...options,
+    headers: {
+      Accept: 'application/vnd.github+json',
+      Authorization: 'Bearer ' + config.token,
+      'X-GitHub-Api-Version': '2022-11-28',
+      'Content-Type': 'application/json',
+      ...(options.headers || {})
+    }
+  });
+  const body = await response.text();
+  let data = null;
+  try { data = body ? JSON.parse(body) : null; } catch (error) {}
+  if (!response.ok) {
+    throw new Error(data && data.message || `GitHub API error (${response.status}).`);
+  }
+  return data;
+}
+
+function getGistRemote(gist) {
+  const file = gist && gist.files && gist.files[SYNC_FILE_NAME];
+  if (!file || typeof file.content !== 'string') throw new Error('The selected Gist does not contain SimplestPrompt data.');
+  const revision = gist.history && gist.history[0] && gist.history[0].version || gist.updated_at || '';
+  return { content: file.content, revision, htmlUrl: gist.html_url || '' };
+}
+
+async function fetchSyncRemote() {
+  const config = await getSyncConfig();
+  if (!config.gistId) throw new Error('Gist ID is not configured.');
+  const gist = await githubApi('/gists/' + encodeURIComponent(config.gistId));
+  return getGistRemote(gist);
+}
+
+async function createSyncGist(content) {
+  const gist = await githubApi('/gists', {
+    method: 'POST',
+    body: JSON.stringify({
+      description: 'SimplestPrompt encrypted sync data',
+      public: false,
+      files: { [SYNC_FILE_NAME]: { content } }
+    })
+  });
+  const remote = getGistRemote(gist);
+  await saveSyncConfig({ gistId: gist.id, lastRemoteRevision: remote.revision, lastSyncAt: new Date().toISOString() });
+  return { gistId: gist.id, revision: remote.revision, htmlUrl: remote.htmlUrl };
+}
+
+async function updateSyncGist(content, expectedRevision, force) {
+  const current = await fetchSyncRemote();
+  if (!force && expectedRevision && current.revision !== expectedRevision) {
+    return { conflict: true, remote: current };
+  }
+  if (!force && !expectedRevision) {
+    return { conflict: true, remote: current };
+  }
+  const config = await getSyncConfig();
+  const gist = await githubApi('/gists/' + encodeURIComponent(config.gistId), {
+    method: 'PATCH',
+    body: JSON.stringify({ files: { [SYNC_FILE_NAME]: { content } } })
+  });
+  const remote = getGistRemote(gist);
+  await saveSyncConfig({ lastRemoteRevision: remote.revision, lastSyncAt: new Date().toISOString() });
+  return { conflict: false, revision: remote.revision, htmlUrl: remote.htmlUrl };
+}
 
 async function getFolders() {
   const { folders } = await chrome.storage.local.get({ folders: [] });
@@ -735,6 +816,63 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   }
   if (msg.action === 'getAutoPaste') {
     chrome.storage.local.get({ autoPaste: false }).then(o => sendResponse({ autoPaste: o.autoPaste }));
+    return true;
+  }
+  if (msg.action === 'syncGetState') {
+    getSyncConfig().then(config => sendResponse({
+      success: true,
+      state: {
+        hasToken: !!config.token,
+        gistId: config.gistId || '',
+        revision: config.lastRemoteRevision || '',
+        localHash: config.lastLocalHash || '',
+        lastSyncAt: config.lastSyncAt || ''
+      }
+    })).catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncSaveConfig') {
+    const patch = {};
+    if (msg.token) patch.token = String(msg.token).trim();
+    if (typeof msg.gistId === 'string') patch.gistId = msg.gistId.trim();
+    getSyncConfig().then((current) => {
+      if (Object.prototype.hasOwnProperty.call(patch, 'gistId') && patch.gistId !== current.gistId) {
+        patch.lastRemoteRevision = '';
+        patch.lastLocalHash = '';
+        patch.lastSyncAt = '';
+      }
+      return saveSyncConfig(patch);
+    }).then(() => sendResponse({ success: true })).catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncMarkRevision') {
+    const patch = {
+      lastRemoteRevision: msg.revision || '',
+      lastSyncAt: msg.lastSyncAt || new Date().toISOString()
+    };
+    if (msg.localHash) patch.lastLocalHash = msg.localHash;
+    saveSyncConfig(patch)
+      .then(() => sendResponse({ success: true })).catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncFetch') {
+    fetchSyncRemote().then(remote => sendResponse({ success: true, remote })).catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncCreate') {
+    createSyncGist(String(msg.content || '')).then(result => sendResponse({ success: true, ...result }))
+      .catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncUpdate') {
+    updateSyncGist(String(msg.content || ''), msg.expectedRevision || '', !!msg.force)
+      .then(result => sendResponse({ success: true, ...result }))
+      .catch(e => sendResponse({ success: false, error: e.message }));
+    return true;
+  }
+  if (msg.action === 'syncClear') {
+    chrome.storage.local.remove('syncConfig').then(() => sendResponse({ success: true }))
+      .catch(e => sendResponse({ success: false, error: e.message }));
     return true;
   }
 });

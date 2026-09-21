@@ -1,4 +1,4 @@
-/* Right-Click Prompt (Local) - side panel. No auth, no cloud. */
+/* SimplestPrompt side panel. Local data plus optional Gist sync. */
 
 let folders = [];
 let selectedFolderId = null;
@@ -7,6 +7,8 @@ let promptSearchQuery = '';
 let aiTargets = [];
 let selectionPrompts = [];
 let aiOnSelectionEnabled = true;
+let syncState = { hasToken: false, gistId: '', revision: '', localHash: '', lastSyncAt: '' };
+let pendingSyncConflict = null;
 
 async function loadFolders() {
   const { folders: f } = await chrome.storage.local.get({ folders: [] });
@@ -708,13 +710,276 @@ function handleAiListActionClick(e) {
 function setActiveTab(tab) {
   const promptsTab = document.getElementById('tabPrompts');
   const aiTab = document.getElementById('tabAi');
+  const syncTab = document.getElementById('tabSync');
   const btnPrompts = document.getElementById('tabPromptsBtn');
   const btnAi = document.getElementById('tabAiBtn');
+  const btnSync = document.getElementById('tabSyncBtn');
   const showPrompts = tab === 'prompts';
+  const showAi = tab === 'ai';
   promptsTab.classList.toggle('hidden', !showPrompts);
-  aiTab.classList.toggle('hidden', showPrompts);
+  aiTab.classList.toggle('hidden', !showAi);
+  syncTab.classList.toggle('hidden', tab !== 'sync');
   btnPrompts.classList.toggle('active', showPrompts);
-  btnAi.classList.toggle('active', !showPrompts);
+  btnAi.classList.toggle('active', showAi);
+  btnSync.classList.toggle('active', tab === 'sync');
+}
+
+function sendRuntimeMessage(message) {
+  return new Promise((resolve, reject) => {
+    chrome.runtime.sendMessage(message, (response) => {
+      if (chrome.runtime.lastError) return reject(new Error(chrome.runtime.lastError.message));
+      if (!response || response.success === false) return reject(new Error(response && response.error || 'Operation failed.'));
+      resolve(response);
+    });
+  });
+}
+
+async function loadSyncState() {
+  try {
+    const response = await sendRuntimeMessage({ action: 'syncGetState' });
+    syncState = response.state || syncState;
+    if (syncState.revision && !syncState.localHash) {
+      const localHash = await hashSyncData(await getSyncData());
+      syncState.localHash = localHash;
+      await sendRuntimeMessage({ action: 'syncMarkRevision', revision: syncState.revision, localHash, lastSyncAt: syncState.lastSyncAt });
+    }
+    const tokenInput = document.getElementById('syncToken');
+    tokenInput.value = '';
+    tokenInput.placeholder = syncState.hasToken ? '****************' : 'Token with Gist permission';
+    document.getElementById('syncGistId').value = syncState.gistId || '';
+    renderSyncStatus();
+  } catch (error) {
+    setSyncStatus('Error', error.message);
+  }
+}
+
+function setSyncStatus(title, meta) {
+  const statusEl = document.getElementById('syncStatus');
+  document.getElementById('syncStatusTitle').textContent = title;
+  document.getElementById('syncStatusMeta').textContent = meta || '';
+  statusEl.dataset.state = title === 'Error' ? 'error' : (title === 'Ready' ? 'success' : 'idle');
+}
+
+function renderSyncStatus() {
+  if (!syncState.hasToken) {
+    setSyncStatus('Sync is not configured', 'Add your Gist token and sync password to get started.');
+    return;
+  }
+  if (!syncState.gistId) {
+    setSyncStatus('Almost ready', 'Create a private Gist or paste an existing Gist URL.');
+    return;
+  }
+  const details = [
+    syncState.gistId ? 'Gist: ' + syncState.gistId : 'No Gist selected.',
+    syncState.lastSyncAt ? 'Last sync: ' + formatSyncDate(syncState.lastSyncAt) : 'No successful sync yet.'
+  ];
+  setSyncStatus('Ready', details.join('\n'));
+}
+
+function formatSyncDate(value) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat('en-GB', {
+    dateStyle: 'medium',
+    timeStyle: 'medium',
+    hourCycle: 'h23'
+  }).format(date);
+}
+
+function normalizeGistId(value) {
+  const trimmed = String(value || '').trim();
+  if (!trimmed) return '';
+  try {
+    const url = new URL(trimmed);
+    if (url.hostname === 'gist.github.com') {
+      const parts = url.pathname.split('/').filter(Boolean);
+      return parts[parts.length - 1] || '';
+    }
+  } catch (error) {}
+  return trimmed.replace(/^.*\//, '').split(/[?#]/)[0];
+}
+
+function getSyncPassphrase() {
+  return document.getElementById('syncPassphrase').value;
+}
+
+async function getSyncData() {
+  return chrome.storage.local.get({
+    folders: [],
+    autoPaste: false,
+    aiOnSelectionEnabled: true,
+    aiTargets: [],
+    selectionPrompts: []
+  });
+}
+
+async function applySyncedData(data) {
+  if (!data || !Array.isArray(data.folders) || !Array.isArray(data.aiTargets) || !Array.isArray(data.selectionPrompts)) {
+    throw new Error('Remote data has an invalid format.');
+  }
+  await chrome.storage.local.set({
+    folders: data.folders,
+    autoPaste: !!data.autoPaste,
+    aiOnSelectionEnabled: data.aiOnSelectionEnabled !== false,
+    aiTargets: data.aiTargets,
+    selectionPrompts: data.selectionPrompts
+  });
+  await loadFolders();
+  await loadAiConfig();
+  document.getElementById('autoPaste').checked = !!data.autoPaste;
+}
+
+async function encryptedLocalPayload() {
+  const passphrase = getSyncPassphrase();
+  if (!passphrase) throw new Error('Enter the encryption passphrase first.');
+  return JSON.stringify(await encryptSyncData(await getSyncData(), passphrase));
+}
+
+async function ensureSyncConnection() {
+  const token = document.getElementById('syncToken').value.trim();
+  const gistId = normalizeGistId(document.getElementById('syncGistId').value);
+  if (token || gistId !== (syncState.gistId || '')) {
+    await saveSyncConnection();
+  }
+  if (!syncState.hasToken) throw new Error('Enter and save a GitHub token first.');
+  if (!syncState.gistId) throw new Error('Enter a Gist URL or create a private Gist first.');
+}
+
+async function pullRemote(remote) {
+  const passphrase = getSyncPassphrase();
+  if (!passphrase) throw new Error('Enter the encryption passphrase first.');
+  const data = await decryptSyncData(JSON.parse(remote.content), passphrase);
+  await applySyncedData(data);
+  const localHash = await hashSyncData(data);
+  await sendRuntimeMessage({ action: 'syncMarkRevision', revision: remote.revision, localHash, lastSyncAt: new Date().toISOString() });
+  await loadSyncState();
+  renderSyncStatus();
+}
+
+function showSyncConflict(conflict) {
+  pendingSyncConflict = conflict;
+  document.getElementById('syncConflictTitle').textContent = conflict.initial ? 'Choose sync version' : 'Remote changes detected';
+  document.getElementById('syncConflictMessage').textContent = conflict.initial
+    ? 'This browser already has local data. Choose whether to use the Gist or upload this local data.'
+    : syncState.revision
+    ? 'The Gist changed since the last sync. Choose which version to keep.'
+    : 'This browser has no sync history for this Gist yet. Choose which version to use.';
+  document.getElementById('syncConflictCancel').disabled = false;
+  document.getElementById('syncConflictRemote').disabled = false;
+  document.getElementById('syncConflictLocal').disabled = false;
+  document.getElementById('syncConflictModal').classList.remove('hidden');
+}
+
+function closeSyncConflict() {
+  pendingSyncConflict = null;
+  document.getElementById('syncConflictModal').classList.add('hidden');
+}
+
+function setSyncConflictBusy(busy, message) {
+  document.getElementById('syncConflictMessage').textContent = message;
+  document.getElementById('syncConflictCancel').disabled = busy;
+  document.getElementById('syncConflictRemote').disabled = busy;
+  document.getElementById('syncConflictLocal').disabled = busy;
+}
+
+async function pushLocal(force) {
+  await ensureSyncConnection();
+  const localData = await getSyncData();
+  const localHash = await hashSyncData(localData);
+  const hasLocalData = localData.folders.length > 0 || localData.aiTargets.length > 0 || localData.selectionPrompts.length > 0;
+  if (!force && !syncState.revision) {
+    const response = await sendRuntimeMessage({ action: 'syncFetch' });
+    if (!hasLocalData) {
+      await pullRemote(response.remote);
+      return;
+    }
+    showSyncConflict({ type: 'initial', initial: true, remote: response.remote });
+    return;
+  }
+  const remoteResponse = await sendRuntimeMessage({ action: 'syncFetch' });
+  const remoteChanged = remoteResponse.remote.revision !== syncState.revision;
+  const localChanged = !syncState.localHash || localHash !== syncState.localHash;
+  if (!force && remoteChanged && !localChanged) {
+    await pullRemote(remoteResponse.remote);
+    return;
+  }
+  if (!force && remoteChanged && localChanged) {
+    showSyncConflict({ type: 'push', remote: remoteResponse.remote });
+    return;
+  }
+  if (!force && !remoteChanged && !localChanged) {
+    renderSyncStatus();
+    return;
+  }
+  const content = JSON.stringify(await encryptSyncData(localData, getSyncPassphrase()));
+  const response = await sendRuntimeMessage({
+    action: 'syncUpdate',
+    content,
+    expectedRevision: syncState.revision || '',
+    force: !!force
+  });
+  if (response.conflict) {
+    showSyncConflict({ type: 'push', remote: response.remote });
+    return;
+  }
+  await sendRuntimeMessage({ action: 'syncMarkRevision', revision: response.revision, localHash, lastSyncAt: new Date().toISOString() });
+  await loadSyncState();
+  renderSyncStatus();
+}
+
+async function pullLocal() {
+  await ensureSyncConnection();
+  const response = await sendRuntimeMessage({ action: 'syncFetch' });
+  await pullRemote(response.remote);
+}
+
+async function checkRemote() {
+  await ensureSyncConnection();
+  const response = await sendRuntimeMessage({ action: 'syncFetch' });
+  if (!syncState.revision) {
+    setSyncStatus('Remote version available', 'Pull it before pushing local data.');
+    return;
+  }
+  if (response.remote.revision === syncState.revision) {
+    setSyncStatus('Ready', 'No remote changes detected.');
+    return;
+  }
+  setSyncStatus('Remote changes detected', 'Choose Pull to review and apply the remote version.');
+}
+
+async function createGist() {
+  if (document.getElementById('syncToken').value.trim()) await saveSyncConnection();
+  const content = await encryptedLocalPayload();
+  const response = await sendRuntimeMessage({ action: 'syncCreate', content });
+  const localHash = await hashSyncData(await getSyncData());
+  await sendRuntimeMessage({ action: 'syncMarkRevision', revision: response.revision, localHash, lastSyncAt: new Date().toISOString() });
+  await loadSyncState();
+  renderSyncStatus();
+  if (response.htmlUrl) window.open(response.htmlUrl, '_blank', 'noopener,noreferrer');
+}
+
+async function saveSyncConnection() {
+  const token = document.getElementById('syncToken').value.trim();
+  const gistId = normalizeGistId(document.getElementById('syncGistId').value);
+  if (!token && !syncState.hasToken) throw new Error('Enter a GitHub token first.');
+  await sendRuntimeMessage({ action: 'syncSaveConfig', token, gistId });
+  document.getElementById('syncToken').value = '';
+  await loadSyncState();
+  setSyncStatus(gistId ? 'Ready' : 'Almost ready', gistId ? 'Click Sync now when you are ready.' : 'Create a private Gist to finish setup.');
+}
+
+async function disconnectSync() {
+  await sendRuntimeMessage({ action: 'syncClear' });
+  syncState = { hasToken: false, gistId: '', revision: '', localHash: '', lastSyncAt: '' };
+  document.getElementById('syncToken').value = '';
+  document.getElementById('syncToken').placeholder = 'Token with Gist permission';
+  document.getElementById('syncGistId').value = '';
+  document.getElementById('syncPassphrase').value = '';
+  renderSyncStatus();
+}
+
+function handleSyncError(error) {
+  setSyncStatus('Error', error.message || String(error));
 }
 
 function loadDefaults() {
@@ -878,6 +1143,40 @@ document.getElementById('aiImportFile').addEventListener('change', (e) => {
 
 document.getElementById('tabPromptsBtn').addEventListener('click', () => setActiveTab('prompts'));
 document.getElementById('tabAiBtn').addEventListener('click', () => setActiveTab('ai'));
+document.getElementById('tabSyncBtn').addEventListener('click', () => {
+  setActiveTab('sync');
+  loadSyncState();
+});
+document.getElementById('syncSaveConnection').addEventListener('click', () => saveSyncConnection().catch(handleSyncError));
+document.getElementById('syncCreateGist').addEventListener('click', () => createGist().catch(handleSyncError));
+document.getElementById('syncPull').addEventListener('click', () => pullLocal().catch(handleSyncError));
+document.getElementById('syncPush').addEventListener('click', () => pushLocal(false).catch(handleSyncError));
+document.getElementById('syncSync').addEventListener('click', () => pushLocal(false).catch(handleSyncError));
+document.getElementById('syncCheck').addEventListener('click', () => checkRemote().catch(handleSyncError));
+document.getElementById('syncDisconnect').addEventListener('click', () => disconnectSync().catch(handleSyncError));
+document.getElementById('syncConflictCancel').addEventListener('click', closeSyncConflict);
+document.getElementById('syncConflictRemote').addEventListener('click', async () => {
+  if (!pendingSyncConflict) return;
+  setSyncConflictBusy(true, 'Downloading and decrypting the remote version...');
+  try {
+    await pullRemote(pendingSyncConflict.remote);
+    closeSyncConflict();
+  } catch (error) {
+    setSyncConflictBusy(false, error.message || String(error));
+    handleSyncError(error);
+  }
+});
+document.getElementById('syncConflictLocal').addEventListener('click', async () => {
+  if (!pendingSyncConflict) return;
+  setSyncConflictBusy(true, 'Encrypting and uploading the local version...');
+  try {
+    await pushLocal(true);
+    closeSyncConflict();
+  } catch (error) {
+    setSyncConflictBusy(false, error.message || String(error));
+    handleSyncError(error);
+  }
+});
 
 (async () => {
   renderVersion();
@@ -885,4 +1184,5 @@ document.getElementById('tabAiBtn').addEventListener('click', () => setActiveTab
   document.getElementById('autoPaste').checked = !!autoPaste;
   loadFolders();
   loadAiConfig();
+  loadSyncState();
 })();
