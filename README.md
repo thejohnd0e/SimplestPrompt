@@ -5,7 +5,10 @@
 **Your prompts, one right-click away. Instant AI on any selected text.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.15-blue.svg)](https://github.com/thejohnd0e/SimplestPrompt/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/thejohnd0e/SimplestPrompt?label=release)](https://github.com/thejohnd0e/SimplestPrompt/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/thejohnd0e/SimplestPrompt/total)](https://github.com/thejohnd0e/SimplestPrompt/releases)
+[![Issues](https://img.shields.io/github/issues/thejohnd0e/SimplestPrompt)](https://github.com/thejohnd0e/SimplestPrompt/issues)
+[![Privacy: local-first](https://img.shields.io/badge/privacy-local--first-brightgreen.svg)](#-sync-between-browsers)
 [![Browser](https://img.shields.io/badge/Chrome-Extension-green.svg)](#installation)
 [![Manifest](https://img.shields.io/badge/Manifest-V3-informational.svg)](#tech-stack)
 
