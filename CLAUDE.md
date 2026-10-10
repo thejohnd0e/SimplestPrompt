@@ -26,3 +26,9 @@ Plain Chrome Manifest V3 extension: no package manager, build, tests, or lint.
 - Storage keys: `folders`, `autoPaste`, `aiOnSelectionEnabled`, `aiTargets`, `selectionPrompts`, `syncConfig`. Preserve these shapes in import/export and sync (see README "Data Model").
 - Gist sync uploads only the encrypted envelope of the first five keys; never the GitHub token, `syncConfig`, or passphrase.
 - `dist/`, `build/`, `.tmp/`, `*.zip` are ignored artifacts; never edit `.tmp/` release copies, edit root sources.
+
+## Versioning
+
+- On every release bump `manifest.json` `version` (`X.Y.0`) and `version_name` (`X.Y`) together so both show the same number (e.g. `2.14.0` / `2.14`), and the `README.md` version badge.
+- Release flow: commit, push `master`, zip the extension files (manifest, scripts, `sidepanel.html`, `icons/`, `LICENSE`) from a staging folder under `.tmp/`, then `gh release create <X.Y> <zip>`.
+- The user's Chrome loads the extension from an unpacked folder; "Reload" only re-reads that folder, so check **Source** in `chrome://extensions` if a version doesn't change. Auto-paste is a per-install setting (`autoPaste`): when it is off the prompt is only copied ("Copied").
