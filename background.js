@@ -448,19 +448,21 @@ async function tryPasteInTab(tabId, text, frameId) {
             return false;
           }
         }
-        function tryPasteWithEvents(el, text) {
+        async function tryPasteWithEvents(el, text) {
           focusAndClick(el);
           var before = readEditableValue(el);
-          var dispatched = dispatchPaste(el, text);
-          var after = readEditableValue(el);
-          if (after !== before) return true;
-          // dispatchEvent returns false only if the page cancelled the event, i.e. handled the paste itself.
-          // An uncancelled synthetic paste inserts nothing, so it must not count as success.
-          if (dispatched === false) return true;
+          // Real editing command first: it inserts exactly once and fires the input events editors listen to.
+          // A synthetic paste is only a fallback, otherwise editors that handle it asynchronously get the text twice.
           try {
             if (document.execCommand('insertText', false, text) && readEditableValue(el) !== before) return true;
           } catch (e) {}
-          return false;
+          var dispatched = dispatchPaste(el, text);
+          if (readEditableValue(el) !== before) return true;
+          // dispatchEvent returns false only if the page cancelled the event, i.e. handled the paste itself.
+          if (dispatched === false) return true;
+          // Some editors insert asynchronously after the paste event.
+          await sleep(300);
+          return readEditableValue(el) !== before;
         }
         function isGemini() {
           return /(^|\.)gemini\.google\.com$/i.test(location.hostname || '');
@@ -483,7 +485,7 @@ async function tryPasteInTab(tabId, text, frameId) {
           focusAndClick(el);
           setSelectionToEnd(el);
           clearEditable(el);
-          if (tryPasteWithEvents(el, text)) return true;
+          if (await tryPasteWithEvents(el, text)) return true;
           try {
             if (document.execCommand('insertText', false, text)) return true;
           } catch (e) {}
@@ -499,7 +501,7 @@ async function tryPasteInTab(tabId, text, frameId) {
         }
         var el = document.activeElement;
         if (el && isEditable(el)) {
-          if (tryPasteWithEvents(el, t)) return true;
+          if (await tryPasteWithEvents(el, t)) return true;
           if (pasteInto(el)) return true;
         }
         if (isGemini()) {
@@ -517,22 +519,22 @@ async function tryPasteInTab(tabId, text, frameId) {
         ];
         var found = await waitForElement(selectors, 8000);
         if (found) {
-          if (tryPasteWithEvents(found, t)) return true;
+          if (await tryPasteWithEvents(found, t)) return true;
           if (pasteInto(found)) return true;
         }
         var textareas = document.querySelectorAll('textarea');
         for (var j = 0; j < textareas.length; j++)
-          if (isVisible(textareas[j]) && (tryPasteWithEvents(textareas[j], t) || pasteInto(textareas[j]))) return true;
+          if (isVisible(textareas[j]) && (await tryPasteWithEvents(textareas[j], t) || pasteInto(textareas[j]))) return true;
         var inputs = document.querySelectorAll('input');
         for (var m = 0; m < inputs.length; m++) {
           var input = inputs[m];
           if (!isTextLikeInput(input)) continue;
           if (isVisible(input))
-            if (tryPasteWithEvents(input, t) || pasteInto(input)) return true;
+            if (await tryPasteWithEvents(input, t) || pasteInto(input)) return true;
         }
         var editables = document.querySelectorAll('[contenteditable="true"]');
         for (var k = 0; k < editables.length; k++)
-          if (isVisible(editables[k]) && (tryPasteWithEvents(editables[k], t) || pasteInto(editables[k]))) return true;
+          if (isVisible(editables[k]) && (await tryPasteWithEvents(editables[k], t) || pasteInto(editables[k]))) return true;
         return false;
       },
       args: [text]
