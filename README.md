@@ -1,7 +1,7 @@
 # SimplestPrompt
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Version](https://img.shields.io/badge/version-2.10-blue.svg)](#)
+[![Version](https://img.shields.io/badge/version-2.11-blue.svg)](#)
 [![Browser](https://img.shields.io/badge/Chrome-Extension-green.svg)](#)
 
 SimplestPrompt — lightweight Chrome Browser extension <br>

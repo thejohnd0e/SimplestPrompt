@@ -454,13 +454,11 @@ async function tryPasteInTab(tabId, text, frameId) {
           var dispatched = dispatchPaste(el, text);
           var after = readEditableValue(el);
           if (after !== before) return true;
-          if (el && el.isContentEditable && dispatched === false) return true;
-          if (dispatched) return true;
+          // dispatchEvent returns false only if the page cancelled the event, i.e. handled the paste itself.
+          // An uncancelled synthetic paste inserts nothing, so it must not count as success.
+          if (dispatched === false) return true;
           try {
-            if (document.execCommand('paste')) return true;
-          } catch (e) {}
-          try {
-            if (document.execCommand('insertText', false, text)) return true;
+            if (document.execCommand('insertText', false, text) && readEditableValue(el) !== before) return true;
           } catch (e) {}
           return false;
         }
