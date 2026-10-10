@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "SimplestPrompt",
-  "version": "2.1.2",
-  "version_name": "2.12",
+  "version": "2.1.3",
+  "version_name": "2.13",
   "description": "Save AI prompts and access them via right-click. Optional encrypted GitHub Gist sync.",
   "permissions": ["storage", "contextMenus", "clipboardWrite", "sidePanel", "activeTab", "scripting"],
   "host_permissions": ["https://gemini.google.com/*", "https://api.github.com/*"],

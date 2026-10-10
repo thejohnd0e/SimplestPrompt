@@ -27,3 +27,6 @@ cursor.md
 
 # Archive outputs
 *.zip
+
+# Playwright MCP logs
+.playwright-mcp/
