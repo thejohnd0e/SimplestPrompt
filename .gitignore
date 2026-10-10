@@ -30,3 +30,7 @@ cursor.md
 
 # Playwright MCP logs
 .playwright-mcp/
+
+# AI assistant instruction files (kept locally)
+AGENTS.md
+CLAUDE.md
