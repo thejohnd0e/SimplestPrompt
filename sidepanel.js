@@ -908,7 +908,9 @@ async function pushLocal(force) {
     return;
   }
   if (!force && !remoteChanged && !localChanged) {
-    renderSyncStatus();
+    await sendRuntimeMessage({ action: 'syncMarkRevision', revision: syncState.revision, localHash, lastSyncAt: new Date().toISOString() });
+    await loadSyncState();
+    setSyncStatus('Ready', 'Already up to date. No changes to upload or download.\n' + document.getElementById('syncStatusMeta').textContent);
     return;
   }
   const content = JSON.stringify(await encryptSyncData(localData, getSyncPassphrase()));
