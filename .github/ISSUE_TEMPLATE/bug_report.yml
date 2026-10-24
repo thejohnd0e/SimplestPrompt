@@ -1,0 +1,99 @@
+name: Bug report
+description: Report a problem with SimplestPrompt.
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem! Please provide the details below so we can investigate.
+
+        **Privacy:** Do not share tokens, passwords, encryption passphrases, or private prompts. Remove sensitive information from screenshots and error logs before uploading them.
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser and exact version
+      description: Copy the full browser version from its About page.
+      placeholder: "Example: Google Chrome 141.0.7390.108 (64-bit)"
+    validations:
+      required: true
+
+  - type: input
+    id: operating-system
+    attributes:
+      label: Operating system and version
+      placeholder: "Example: Windows 11 24H2, macOS 15.6, Ubuntu 24.04"
+    validations:
+      required: true
+
+  - type: input
+    id: extension-version
+    attributes:
+      label: SimplestPrompt version
+      description: Find the version on your browser's extensions management page.
+      placeholder: "Example: 2.15.0"
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem description
+      description: Describe what is broken and where it happens.
+      placeholder: "Example: The SimplestPrompt item appears in the page's right-click menu, but its submenu is missing."
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include the type of page or a public URL, if relevant. Do not include private URLs or data.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected result
+      description: What should happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual result
+      description: What happens instead? Include whether the problem occurs every time or only sometimes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: regression
+    attributes:
+      label: Did it work before? What changed?
+      description: If it worked before, include the last working version if known and any changes before the problem started. Otherwise, say "Never worked", "Unknown", or "Not applicable".
+    validations:
+      required: true
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots (optional)
+      description: Drag and drop screenshots here. For menu problems, show the affected menu. Hide private information first.
+
+  - type: textarea
+    id: errors
+    attributes:
+      label: Extension errors (optional)
+      description: If available, paste errors from the extension's error details or service worker console on your browser's extensions management page. Remove tokens, passwords, private prompts, and other sensitive data first.
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context (optional)
+      description: Include anything else that may help, such as workarounds or relevant browser settings.
