@@ -121,7 +121,7 @@ globalThis.I18n = (() => {
     'Gist URL': 'Ссылка на Gist',
     'Your data stays local unless you enable syncing.': 'Пока вы не включите синхронизацию, данные остаются в браузере.',
     'Enter the Gist URL, token and password, then click Enable syncing.': 'Введите ссылку на Gist, токен и пароль, затем нажмите «Включить синхронизацию».',
-    'Works on its own, nothing to click. Changes from your other browsers arrive when you open this panel.': 'Работает само, нажимать ничего не нужно. Изменения из других браузеров появятся, когда вы откроете эту панель.',
+    'Works on its own, nothing to click.': 'Работает само, нажимать ничего не нужно.',
     'Connecting…': 'Подключение…',
     'Set up syncing first.': 'Сначала настройте синхронизацию.',
     'The Gist has no SimplestPrompt data yet.': 'В этом Gist ещё нет данных SimplestPrompt.',
