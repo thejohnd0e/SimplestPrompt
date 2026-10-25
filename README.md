@@ -233,9 +233,7 @@ Selection prompt:
 
 ### Development checks
 
-No dependencies or build step are required. With Node.js installed, run `node --test` for localization, context-menu and sync-connection checks, and `node --check` on `background.js`, `sidepanel.js`, `content.js`, `crypto.js` and `i18n.js` for syntax checks.
-
-For real-DOM panel checks, serve the repository locally (for example `python -m http.server 8765 --bind 127.0.0.1`) and open `http://127.0.0.1:8765/tests/panel.test.html`. This harness uses isolated test data and substitutes only the Chrome APIs; it does not access your installed extension's storage or contact GitHub. After a source change, reload the unpacked extension and manually check the actual page context menus and Gemini integration as well.
+No dependencies or build step are required. With Node.js installed, run `node --check` on `background.js`, `sidepanel.js`, `content.js`, `crypto.js` and `i18n.js` for syntax checks. After a source change, reload the unpacked extension and manually check the side panel, the page context menus and Gemini integration.
 
 ## Permissions
 

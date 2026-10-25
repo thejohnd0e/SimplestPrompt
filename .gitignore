@@ -34,3 +34,7 @@ cursor.md
 # AI assistant instruction files (kept locally)
 AGENTS.md
 CLAUDE.md
+
+# Local-only: agent plans/specs and test harness (kept locally)
+docs/superpowers/
+tests/
