@@ -116,7 +116,7 @@ Open **Settings** (the gear button) and find **Syncing**. There are three fields
 1. **Gist URL.** [Create a secret Gist](https://gist.github.com/) and paste its URL, or leave the field empty and the extension creates one for you.
 2. **Gist token.** [Create a token (classic)](https://github.com/settings/tokens/new?scopes=gist&description=SimplestPrompt) with only the **`gist`** permission and paste it. It is saved in this browser only.
 3. **Sync password.** Used to encrypt your data. Choose one and **use the same password in every browser**; it is saved in this browser only.
-4. Click **Enable syncing**. The status box shows the Gist, the **Last sync** time and **Disconnect**. Once sync works, the button is called **Update connection**; use it to enter a new token or Gist.
+4. Click **Enable syncing**. The status box shows the Gist, the **Last sync** time and **Disconnect**. Once sync works, the button is called **Update sync settings**; use it to enter a new token or Gist.
 
 ### Another browser
 
@@ -130,7 +130,7 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 | Another browser changed the Gist | The change is downloaded on the next check, when nothing changed locally |
 | Both sides changed | Nothing is overwritten silently: you choose the local or the Gist version (data is not merged) |
 | Your token expired or was rejected | The status says so. Create a new token, paste it into **Gist token** and click **Enable syncing**. The previous connection stays unchanged until GitHub accepts the new one |
-| You want a specific version | Use **Advanced: choose a version manually** |
+| You want a specific version | Use **Troubleshooting: overwrite one side** |
 | You want to stop | Click **Disconnect** (removes the saved token, password and Gist from this browser; the Gist on GitHub is kept) |
 
 ### Security
