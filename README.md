@@ -35,7 +35,7 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
   <img src="assets/screenshot-4.png" width="380" alt="Right-click menu: AI on Selection with prompts and AI targets">
 </p>
 <p align="center">
-  <img src="assets/screenshot-5.png" width="380" alt="Settings: language and automatic encrypted sync through a GitHub Gist">
+  <img src="assets/screenshot-5.png?v=2" width="380" alt="Settings: language and automatic encrypted sync through a GitHub Gist">
 </p>
 
 ## Contents
