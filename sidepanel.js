@@ -1,5 +1,7 @@
 /* SimplestPrompt side panel. Local data plus optional Gist sync. */
 
+const tr = I18n.t;
+
 let folders = [];
 let selectedFolderId = null;
 let dragState = null;
@@ -9,6 +11,24 @@ let selectionPrompts = [];
 let aiOnSelectionEnabled = true;
 let syncState = { hasToken: false, gistId: '', revision: '', localHash: '', lastSyncAt: '' };
 let pendingSyncConflict = null;
+let lastSyncStatus = null;
+let syncConflictError = null;
+
+function setTranslatedText(id, key) {
+  const el = document.getElementById(id);
+  el.dataset.i18n = key;
+  el.textContent = tr(key);
+}
+
+function applyInterfaceLanguage() {
+  I18n.apply();
+  document.getElementById('languageSelect').value = I18n.language;
+  document.getElementById('syncToken').placeholder = syncState.hasToken ? '****************' : tr('Token with Gist permission');
+  render();
+  renderAiTab();
+  if (lastSyncStatus) renderSyncMessage();
+  if (syncConflictError) document.getElementById('syncConflictMessage').textContent = I18n.errorMessage(syncConflictError);
+}
 
 async function loadFolders() {
   const { folders: f } = await chrome.storage.local.get({ folders: [] });
@@ -52,8 +72,8 @@ function render() {
     div.draggable = true;
     div.innerHTML = `
       <div class="meta">
-        <span class="name">${escapeHtml(f.name || 'Unnamed')}</span>
-        <span class="count">${(f.prompts || []).length} prompts</span>
+        <span class="name">${escapeHtml(f.name || tr('Unnamed'))}</span>
+        <span class="count">${escapeHtml(tr('Prompts: {count}', { count: (f.prompts || []).length }))}</span>
       </div>
     `;
     div.addEventListener('click', () => selectFolder(f.id));
@@ -124,11 +144,11 @@ function createPromptCard(prompt, folder, showFolderName) {
   card.dataset.folderId = folder.id;
   card.draggable = true;
   card.innerHTML = `
-    <div class="title">${escapeHtml(prompt.title || 'Untitled')}</div>
-    ${showFolderName ? `<div class="folder-name">${escapeHtml(folder.name || 'Unnamed')}</div>` : ''}
+    <div class="title">${escapeHtml(prompt.title || tr('Untitled'))}</div>
+    ${showFolderName ? `<div class="folder-name">${escapeHtml(folder.name || tr('Unnamed'))}</div>` : ''}
     <div class="text">${escapeHtml((prompt.text || '').slice(0, 120))}${(prompt.text || '').length > 120 ? '…' : ''}</div>
     <div class="actions">
-      <button type="button" class="btn" data-action="copy" data-id="${prompt.id}">Copy</button>
+      <button type="button" class="btn" data-action="copy" data-id="${prompt.id}">${tr('Copy')}</button>
     </div>
   `;
   card.addEventListener('dblclick', (e) => {
@@ -157,7 +177,7 @@ function renderPrompts() {
     listEl.innerHTML = '';
 
     if (results.length === 0) {
-      listEl.innerHTML = '<div class="empty">No prompts found.</div>';
+      listEl.innerHTML = `<div class="empty">${escapeHtml(tr('No prompts found.'))}</div>`;
       return;
     }
 
@@ -170,7 +190,7 @@ function renderPrompts() {
   if (!folder) {
     emptyEl.classList.remove('hidden');
     listEl.classList.add('hidden');
-    emptyEl.textContent = folders.length === 0 ? 'Add a folder to get started.' : 'Select a folder or add one.';
+    emptyEl.textContent = tr(folders.length === 0 ? 'Add a folder to get started.' : 'Select a folder or add one.');
     return;
   }
 
@@ -180,7 +200,7 @@ function renderPrompts() {
   listEl.innerHTML = '';
 
   if (prompts.length === 0) {
-    listEl.innerHTML = '<div class="empty">No prompts. Click "+ Prompt" to add one.</div>';
+    listEl.innerHTML = `<div class="empty">${escapeHtml(tr('No prompts. Click "+ Prompt" to add one.'))}</div>`;
     return;
   }
 
@@ -208,7 +228,7 @@ async function copyPrompt(promptId) {
   try {
     await navigator.clipboard.writeText(location.prompt.text || '');
     const btn = document.querySelector(`button[data-action="copy"][data-id="${promptId}"]`);
-    if (btn) { btn.textContent = 'Copied!'; setTimeout(() => { btn.textContent = 'Copy'; }, 1500); }
+    if (btn) { btn.textContent = tr('Copied!'); setTimeout(() => { btn.textContent = tr('Copy'); }, 1500); }
   } catch (e) {
     console.error(e);
   }
@@ -340,7 +360,7 @@ function renderAiTargets() {
   if (!listEl) return;
   listEl.innerHTML = '';
   if (aiTargets.length === 0) {
-    listEl.innerHTML = '<div class="empty">No AI targets. Click "+ Target" to add one.</div>';
+    listEl.innerHTML = `<div class="empty">${escapeHtml(tr('No AI targets. Click "+ Target" to add one.'))}</div>`;
     return;
   }
   aiTargets.forEach((t) => {
@@ -349,11 +369,11 @@ function renderAiTargets() {
     card.dataset.id = t.id;
     const queryLabel = (t.queryParam === '' || t.queryParam == null) ? '—' : (t.queryParam || 'q=');
     card.innerHTML = `
-      <div class="title">${escapeHtml(t.name || 'AI')}</div>
+      <div class="title">${escapeHtml(t.name || tr('AI'))}</div>
       <div class="meta">${escapeHtml(t.baseUrl || '')}</div>
-      <div class="meta">Query: ${escapeHtml(queryLabel)}${t.usePasteFallback ? ' · paste fallback' : ''}</div>
+      <div class="meta">${tr('Query:')} ${escapeHtml(queryLabel)}${t.usePasteFallback ? tr(' · paste fallback') : ''}</div>
       <div class="actions">
-        <button type="button" class="btn" data-action="edit-target" data-id="${t.id}">Edit</button>
+        <button type="button" class="btn" data-action="edit-target" data-id="${t.id}">${tr('Edit')}</button>
       </div>
     `;
     card.addEventListener('dblclick', () => openEditAiTargetModal(t.id));
@@ -366,7 +386,7 @@ function renderSelectionPrompts() {
   if (!listEl) return;
   listEl.innerHTML = '';
   if (selectionPrompts.length === 0) {
-    listEl.innerHTML = '<div class="empty">No selection prompts. Click "+ Prompt" to add one.</div>';
+    listEl.innerHTML = `<div class="empty">${escapeHtml(tr('No selection prompts. Click "+ Prompt" to add one.'))}</div>`;
     return;
   }
   selectionPrompts.forEach((p) => {
@@ -376,10 +396,10 @@ function renderSelectionPrompts() {
     card.draggable = true;
     const preview = (p.template || '').slice(0, 120);
     card.innerHTML = `
-      <div class="title">${escapeHtml(p.name || 'Untitled')}</div>
+      <div class="title">${escapeHtml(p.name || tr('Untitled'))}</div>
       <div class="meta">${escapeHtml(preview)}${(p.template || '').length > 120 ? '…' : ''}</div>
       <div class="actions">
-        <button type="button" class="btn" data-action="edit-selection" data-id="${p.id}">Edit</button>
+        <button type="button" class="btn" data-action="edit-selection" data-id="${p.id}">${tr('Edit')}</button>
       </div>
     `;
     card.addEventListener('dblclick', () => openEditSelectionPromptModal(p.id));
@@ -395,7 +415,7 @@ function renderSelectionPrompts() {
 function editPrompt(promptId) {
   const location = getPromptLocation(promptId);
   if (!location) return;
-  document.getElementById('modalPromptTitle').textContent = 'Edit prompt';
+  setTranslatedText('modalPromptTitle', 'Edit prompt');
   document.getElementById('promptTitle').value = location.prompt.title || '';
   document.getElementById('promptText').value = location.prompt.text || '';
   document.getElementById('savePrompt').dataset.editId = promptId;
@@ -405,7 +425,7 @@ function editPrompt(promptId) {
 }
 
 function openAddAiTargetModal() {
-  document.getElementById('modalAiTargetTitle').textContent = 'New AI target';
+  setTranslatedText('modalAiTargetTitle', 'New AI target');
   document.getElementById('aiTargetName').value = '';
   document.getElementById('aiTargetBaseUrl').value = '';
   document.getElementById('aiTargetQueryParam').value = 'q=';
@@ -418,7 +438,7 @@ function openAddAiTargetModal() {
 function openEditAiTargetModal(targetId) {
   const target = aiTargets.find(t => t.id === targetId);
   if (!target) return;
-  document.getElementById('modalAiTargetTitle').textContent = 'Edit AI target';
+  setTranslatedText('modalAiTargetTitle', 'Edit AI target');
   document.getElementById('aiTargetName').value = target.name || '';
   document.getElementById('aiTargetBaseUrl').value = target.baseUrl || '';
   document.getElementById('aiTargetQueryParam').value = target.queryParam != null ? target.queryParam : 'q=';
@@ -429,7 +449,7 @@ function openEditAiTargetModal(targetId) {
 }
 
 function openAddSelectionPromptModal() {
-  document.getElementById('modalSelectionPromptTitle').textContent = 'New selection prompt';
+  setTranslatedText('modalSelectionPromptTitle', 'New selection prompt');
   document.getElementById('selectionPromptName').value = '';
   document.getElementById('selectionPromptTemplate').value = '';
   document.getElementById('saveSelectionPrompt').dataset.editId = '';
@@ -440,7 +460,7 @@ function openAddSelectionPromptModal() {
 function openEditSelectionPromptModal(promptId) {
   const prompt = selectionPrompts.find(p => p.id === promptId);
   if (!prompt) return;
-  document.getElementById('modalSelectionPromptTitle').textContent = 'Edit selection prompt';
+  setTranslatedText('modalSelectionPromptTitle', 'Edit selection prompt');
   document.getElementById('selectionPromptName').value = prompt.name || '';
   document.getElementById('selectionPromptTemplate').value = prompt.template || '';
   document.getElementById('saveSelectionPrompt').dataset.editId = prompt.id;
@@ -449,7 +469,7 @@ function openEditSelectionPromptModal(promptId) {
 }
 
 function openAddFolderModal() {
-  document.getElementById('modalFolderTitle').textContent = 'New folder';
+  setTranslatedText('modalFolderTitle', 'New folder');
   document.getElementById('folderName').value = '';
   document.getElementById('saveFolder').dataset.editFolderId = '';
   document.getElementById('deleteFolder').classList.add('hidden');
@@ -459,7 +479,7 @@ function openAddFolderModal() {
 function openEditFolderModal(folderId) {
   const folder = folders.find(f => f.id === folderId);
   if (!folder) return;
-  document.getElementById('modalFolderTitle').textContent = 'Edit folder';
+  setTranslatedText('modalFolderTitle', 'Edit folder');
   document.getElementById('folderName').value = folder.name || '';
   document.getElementById('saveFolder').dataset.editFolderId = folder.id;
   document.getElementById('deleteFolder').classList.remove('hidden');
@@ -468,10 +488,10 @@ function openEditFolderModal(folderId) {
 
 function openAddPromptModal() {
   if (!getSelectedFolder()) {
-    alert('Select a folder first.');
+    alert(tr('Select a folder first.'));
     return;
   }
-  document.getElementById('modalPromptTitle').textContent = 'New prompt';
+  setTranslatedText('modalPromptTitle', 'New prompt');
   document.getElementById('promptTitle').value = '';
   document.getElementById('promptText').value = '';
   document.getElementById('savePrompt').dataset.editId = '';
@@ -504,7 +524,7 @@ function saveFolderFromModal() {
 }
 
 function saveAiTargetFromModal() {
-  const name = document.getElementById('aiTargetName').value.trim() || 'AI Target';
+  const name = document.getElementById('aiTargetName').value.trim() || tr('AI Target');
   const baseUrl = document.getElementById('aiTargetBaseUrl').value.trim();
   const queryParam = document.getElementById('aiTargetQueryParam').value.trim();
   const usePasteFallback = document.getElementById('aiTargetUsePaste').checked;
@@ -539,7 +559,7 @@ function savePromptFromModal() {
   const editFolderId = document.getElementById('savePrompt').dataset.editFolderId;
   const folder = editId && editFolderId ? folders.find(f => f.id === editFolderId) : getSelectedFolder();
   if (!folder) return;
-  const title = document.getElementById('promptTitle').value.trim() || 'Untitled';
+  const title = document.getElementById('promptTitle').value.trim() || tr('Untitled');
   const text = document.getElementById('promptText').value.trim();
 
   if (editId) {
@@ -565,7 +585,7 @@ function savePromptFromModal() {
 }
 
 function saveSelectionPromptFromModal() {
-  const name = document.getElementById('selectionPromptName').value.trim() || 'Selection prompt';
+  const name = document.getElementById('selectionPromptName').value.trim() || tr('Selection prompt');
   const template = document.getElementById('selectionPromptTemplate').value.trim();
   const editId = document.getElementById('saveSelectionPrompt').dataset.editId;
 
@@ -654,15 +674,15 @@ function importFromJson(file) {
       const raw = e.target.result;
       const data = JSON.parse(raw);
       if (!Array.isArray(data)) {
-        alert('Invalid format: expected a JSON array of folders.');
+        alert(tr('Invalid format: expected a JSON array of folders.'));
         return;
       }
       const next = data.map(f => ({
         id: f.id || uuid(),
-        name: f.name || 'Imported',
+        name: f.name || tr('Imported'),
         prompts: Array.isArray(f.prompts) ? f.prompts.map(p => ({
           id: p.id || uuid(),
-          title: p.title || 'Untitled',
+          title: p.title || tr('Untitled'),
           text: p.text || '',
           timestamp: p.timestamp || new Date().toISOString()
         })) : []
@@ -671,9 +691,9 @@ function importFromJson(file) {
       await saveFolders();
       loadFolders();
       document.getElementById('importFile').value = '';
-      alert('Import done. ' + next.length + ' folder(s) loaded.');
+      alert(tr('Import done. {count} folder(s) loaded.', { count: next.length }));
     } catch (err) {
-      alert('Invalid JSON or format: ' + (err.message || err));
+      alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
     }
   };
   reader.readAsText(file);
@@ -710,18 +730,19 @@ function handleAiListActionClick(e) {
 function setActiveTab(tab) {
   const promptsTab = document.getElementById('tabPrompts');
   const aiTab = document.getElementById('tabAi');
-  const syncTab = document.getElementById('tabSync');
+  const settingsTab = document.getElementById('tabSettings');
   const btnPrompts = document.getElementById('tabPromptsBtn');
   const btnAi = document.getElementById('tabAiBtn');
-  const btnSync = document.getElementById('tabSyncBtn');
+  const btnSettings = document.getElementById('tabSettingsBtn');
   const showPrompts = tab === 'prompts';
   const showAi = tab === 'ai';
   promptsTab.classList.toggle('hidden', !showPrompts);
   aiTab.classList.toggle('hidden', !showAi);
-  syncTab.classList.toggle('hidden', tab !== 'sync');
+  settingsTab.classList.toggle('hidden', tab !== 'settings');
   btnPrompts.classList.toggle('active', showPrompts);
   btnAi.classList.toggle('active', showAi);
-  btnSync.classList.toggle('active', tab === 'sync');
+  btnSettings.classList.toggle('active', tab === 'settings');
+  btnSettings.setAttribute('aria-pressed', String(tab === 'settings'));
 }
 
 function sendRuntimeMessage(message) {
@@ -745,18 +766,24 @@ async function loadSyncState() {
     }
     const tokenInput = document.getElementById('syncToken');
     tokenInput.value = '';
-    tokenInput.placeholder = syncState.hasToken ? '****************' : 'Token with Gist permission';
+    tokenInput.placeholder = syncState.hasToken ? '****************' : tr('Token with Gist permission');
     document.getElementById('syncGistId').value = syncState.gistId || '';
     renderSyncStatus();
   } catch (error) {
-    setSyncStatus('Error', error.message);
+    handleSyncError(error);
   }
 }
 
 function setSyncStatus(title, meta) {
+  lastSyncStatus = { title, meta };
+  renderSyncMessage();
+}
+
+function renderSyncMessage() {
+  const { title, meta } = lastSyncStatus;
   const statusEl = document.getElementById('syncStatus');
-  document.getElementById('syncStatusTitle').textContent = title;
-  document.getElementById('syncStatusMeta').textContent = meta || '';
+  document.getElementById('syncStatusTitle').textContent = tr(title);
+  document.getElementById('syncStatusMeta').textContent = typeof meta === 'function' ? meta() : tr(meta || '');
   statusEl.dataset.state = title === 'Error' ? 'error' : (title === 'Ready' ? 'success' : 'idle');
 }
 
@@ -769,17 +796,16 @@ function renderSyncStatus() {
     setSyncStatus('Almost ready', 'Create a private Gist or paste an existing Gist URL.');
     return;
   }
-  const details = [
-    syncState.gistId ? 'Gist: ' + syncState.gistId : 'No Gist selected.',
-    syncState.lastSyncAt ? 'Last sync: ' + formatSyncDate(syncState.lastSyncAt) : 'No successful sync yet.'
-  ];
-  setSyncStatus('Ready', details.join('\n'));
+  setSyncStatus('Ready', () => [
+    syncState.gistId ? tr('Gist: {id}', { id: syncState.gistId }) : tr('No Gist selected.'),
+    syncState.lastSyncAt ? tr('Last sync: {date}', { date: formatSyncDate(syncState.lastSyncAt) }) : tr('No successful sync yet.')
+  ].join('\n'));
 }
 
 function formatSyncDate(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return value;
-  return new Intl.DateTimeFormat('en-GB', {
+  return new Intl.DateTimeFormat(I18n.language === 'ru' ? 'ru-RU' : 'en-GB', {
     dateStyle: 'medium',
     timeStyle: 'medium',
     hourCycle: 'h23'
@@ -857,13 +883,14 @@ async function pullRemote(remote) {
 }
 
 function showSyncConflict(conflict) {
+  syncConflictError = null;
   pendingSyncConflict = conflict;
-  document.getElementById('syncConflictTitle').textContent = conflict.initial ? 'Choose sync version' : 'Remote changes detected';
-  document.getElementById('syncConflictMessage').textContent = conflict.initial
+  setTranslatedText('syncConflictTitle', conflict.initial ? 'Choose sync version' : 'Remote changes detected');
+  setTranslatedText('syncConflictMessage', conflict.initial
     ? 'This browser already has local data. Choose whether to use the Gist or upload this local data.'
     : syncState.revision
     ? 'The Gist changed since the last sync. Choose which version to keep.'
-    : 'This browser has no sync history for this Gist yet. Choose which version to use.';
+    : 'This browser has no sync history for this Gist yet. Choose which version to use.');
   document.getElementById('syncConflictCancel').disabled = false;
   document.getElementById('syncConflictRemote').disabled = false;
   document.getElementById('syncConflictLocal').disabled = false;
@@ -871,12 +898,19 @@ function showSyncConflict(conflict) {
 }
 
 function closeSyncConflict() {
+  syncConflictError = null;
   pendingSyncConflict = null;
   document.getElementById('syncConflictModal').classList.add('hidden');
 }
 
 function setSyncConflictBusy(busy, message) {
-  document.getElementById('syncConflictMessage').textContent = message;
+  syncConflictError = typeof message === 'string' ? null : message;
+  if (typeof message === 'string') setTranslatedText('syncConflictMessage', message);
+  else {
+    const el = document.getElementById('syncConflictMessage');
+    delete el.dataset.i18n;
+    el.textContent = I18n.errorMessage(message);
+  }
   document.getElementById('syncConflictCancel').disabled = busy;
   document.getElementById('syncConflictRemote').disabled = busy;
   document.getElementById('syncConflictLocal').disabled = busy;
@@ -910,7 +944,8 @@ async function pushLocal(force) {
   if (!force && !remoteChanged && !localChanged) {
     await sendRuntimeMessage({ action: 'syncMarkRevision', revision: syncState.revision, localHash, lastSyncAt: new Date().toISOString() });
     await loadSyncState();
-    setSyncStatus('Ready', 'Already up to date. No changes to upload or download.\n' + document.getElementById('syncStatusMeta').textContent);
+    const details = lastSyncStatus.meta;
+    setSyncStatus('Ready', () => tr('Already up to date. No changes to upload or download.') + '\n' + (typeof details === 'function' ? details() : tr(details)));
     return;
   }
   const content = JSON.stringify(await encryptSyncData(localData, getSyncPassphrase()));
@@ -974,14 +1009,14 @@ async function disconnectSync() {
   await sendRuntimeMessage({ action: 'syncClear' });
   syncState = { hasToken: false, gistId: '', revision: '', localHash: '', lastSyncAt: '' };
   document.getElementById('syncToken').value = '';
-  document.getElementById('syncToken').placeholder = 'Token with Gist permission';
+  document.getElementById('syncToken').placeholder = tr('Token with Gist permission');
   document.getElementById('syncGistId').value = '';
   document.getElementById('syncPassphrase').value = '';
   renderSyncStatus();
 }
 
 function handleSyncError(error) {
-  setSyncStatus('Error', error.message || String(error));
+  setSyncStatus('Error', () => I18n.errorMessage(error));
 }
 
 function loadDefaults() {
@@ -1031,20 +1066,20 @@ function importAiConfig(file) {
       const raw = e.target.result;
       const data = JSON.parse(raw);
       if (!data || typeof data !== 'object') {
-        alert('Invalid format: expected a JSON object.');
+        alert(tr('Invalid format: expected a JSON object.'));
         return;
       }
       const nextEnabled = data.aiOnSelectionEnabled !== false;
       const nextTargets = Array.isArray(data.aiTargets) ? data.aiTargets.map(t => ({
         id: t.id || uuid(),
-        name: t.name || 'AI',
+        name: t.name || tr('AI'),
         baseUrl: t.baseUrl || '',
         queryParam: t.queryParam != null ? t.queryParam : 'q=',
         usePasteFallback: !!t.usePasteFallback
       })) : [];
       const nextPrompts = Array.isArray(data.selectionPrompts) ? data.selectionPrompts.map(p => ({
         id: p.id || uuid(),
-        name: p.name || 'Selection prompt',
+        name: p.name || tr('Selection prompt'),
         template: p.template || '',
         timestamp: p.timestamp || new Date().toISOString()
       })) : [];
@@ -1054,9 +1089,9 @@ function importAiConfig(file) {
       await saveAiConfig();
       loadAiConfig();
       document.getElementById('aiImportFile').value = '';
-      alert('AI on Selection import done. ' + nextTargets.length + ' target(s), ' + nextPrompts.length + ' prompt(s).');
+      alert(tr('AI on Selection import done. {targets} target(s), {prompts} prompt(s).', { targets: nextTargets.length, prompts: nextPrompts.length }));
     } catch (err) {
-      alert('Invalid JSON or format: ' + (err.message || err));
+      alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
     }
   };
   reader.readAsText(file);
@@ -1145,8 +1180,8 @@ document.getElementById('aiImportFile').addEventListener('change', (e) => {
 
 document.getElementById('tabPromptsBtn').addEventListener('click', () => setActiveTab('prompts'));
 document.getElementById('tabAiBtn').addEventListener('click', () => setActiveTab('ai'));
-document.getElementById('tabSyncBtn').addEventListener('click', () => {
-  setActiveTab('sync');
+document.getElementById('tabSettingsBtn').addEventListener('click', () => {
+  setActiveTab('settings');
   loadSyncState();
 });
 document.getElementById('syncSaveConnection').addEventListener('click', () => saveSyncConnection().catch(handleSyncError));
@@ -1164,7 +1199,7 @@ document.getElementById('syncConflictRemote').addEventListener('click', async ()
     await pullRemote(pendingSyncConflict.remote);
     closeSyncConflict();
   } catch (error) {
-    setSyncConflictBusy(false, error.message || String(error));
+    setSyncConflictBusy(false, error);
     handleSyncError(error);
   }
 });
@@ -1175,12 +1210,35 @@ document.getElementById('syncConflictLocal').addEventListener('click', async () 
     await pushLocal(true);
     closeSyncConflict();
   } catch (error) {
-    setSyncConflictBusy(false, error.message || String(error));
+    setSyncConflictBusy(false, error);
     handleSyncError(error);
   }
 });
 
+document.getElementById('languageSelect').addEventListener('change', async (event) => {
+  const select = event.target;
+  select.disabled = true;
+  try {
+    await I18n.setLanguage(select.value);
+    applyInterfaceLanguage();
+  } catch (error) {
+    select.value = I18n.language;
+    handleSyncError(error);
+  } finally {
+    select.disabled = false;
+  }
+});
+
+chrome.storage.onChanged.addListener(async (changes, area) => {
+  if (area === 'local' && changes.language) {
+    await I18n.load();
+    applyInterfaceLanguage();
+  }
+});
+
 (async () => {
+  await I18n.load();
+  applyInterfaceLanguage();
   renderVersion();
   const autoPaste = await loadAutoPasteState();
   document.getElementById('autoPaste').checked = !!autoPaste;

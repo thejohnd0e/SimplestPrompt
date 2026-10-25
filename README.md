@@ -93,30 +93,42 @@ A separate context menu that appears only when text is selected: `AI on Selectio
 
 ### Sync
 
-Optional, manual, end-to-end encrypted sync through a private GitHub Gist. See [Sync between browsers](#-sync-between-browsers).
+Optional, manual, end-to-end encrypted sync through a private GitHub Gist, available under **Settings** (the gear button). See [Sync between browsers](#-sync-between-browsers).
+
+### Interface language
+
+Open **Settings** (the gear button) and use **Language** at the top to choose **English** or **Русский**. English is the default regardless of your browser language. The selection applies immediately to the panel, dialogs, help and extension context-menu labels, and is remembered in this browser only. It is not synced or exported. Your prompt text, folder names, AI target names and saved templates are never translated or changed by this setting.
 
 ## 🔄 Sync between browsers
 
-Keep the same prompts on every computer or browser profile. Sync is **optional** and **manual**: nothing is uploaded until you click **Sync now**.
+Keep the same prompts on every computer or browser profile. Sync is **optional** and **manual**: data is uploaded when you click **Create a private Gist**, **Sync now** (when uploading changes), or **Upload local version**. It never runs automatically.
 
 **What is synced:** your prompts and folders, AI targets, selection prompts, the AI on Selection switch, and the auto-paste setting.
-**What is never synced:** your GitHub token, your password, and the sync settings.
+**What is never synced:** your GitHub token, your password, the sync settings, and the interface language.
 
-### Set it up (about 2 minutes)
+### First browser
 
-1. **Create a GitHub token.** Open <https://github.com/settings/tokens/new>, tick the classic **`gist`** scope and create the token.
-2. In the side panel open the **Sync** tab and paste the token.
-3. **Gist:** leave *Sync URL* empty and click **Create a private Gist**, or paste the URL/ID of an existing Gist.
-4. **Choose a sync password.** It encrypts your data before it leaves the browser.
-5. Click **Enable syncing**, then **Sync now**.
+You need a free GitHub account. A **Gist** is a file stored on GitHub; the extension uses it to store an encrypted copy of your prompts and settings. Open **Settings** (the gear button) and scroll to **Syncing**, which also has a collapsible **How to set up sync** guide.
+
+1. **Create a GitHub token (classic).** Open <https://github.com/settings/tokens/new?scopes=gist&description=SimplestPrompt>, select only the **`gist`** permission, click **Generate token**, and copy the token. It gives the extension access to your Gists; treat it like a password.
+2. Open the side panel's **Settings** (gear button), find **Syncing** and paste it into **Gist token**.
+3. **Choose and enter a Sync password.** This is a separate encryption password, not your GitHub password. Keep it somewhere safe: it cannot be recovered.
+4. Leave **Sync URL** empty and click **Create a private Gist**. This immediately uploads your encrypted data and saves the connection; you do not need to create a Gist on GitHub or click **Enable syncing** separately.
+5. Keep the Gist URL shown in **Sync URL** for your other browser.
+
+### Connect another browser
+
+1. Open **Settings → Syncing** and enter your GitHub token, the **same Gist URL**, and the **same sync password**. Do not create another Gist.
+2. Click **Enable syncing**, then **Sync now**.
+3. If asked which version to keep, choose **Use remote** to download the data from your first browser. This replaces the current browser's local data rather than merging it.
 
 ### Using it day to day
 
 | You want to… | Do this |
 | --- | --- |
-| Upload your latest changes | Open the Sync tab and click **Sync now** |
+| Upload your latest changes | Open **Settings → Syncing** and click **Sync now** |
 | Get changes made in another browser | Click **Sync now** (it downloads them if nothing changed locally) |
-| Set up a new browser | Paste the same token and Gist URL, enter the same password, click **Sync now** |
+| Set up a new browser | Follow **Connect another browser** above |
 | Check what happened | Read the status box: it shows the Gist and the **Last sync** time; "Already up to date" means there was nothing to upload or download |
 | Pick an older version | Use **Advanced: choose a version manually** |
 | Stop syncing | Click **Disconnect** (removes the saved token and sync settings from this browser) |
@@ -129,7 +141,7 @@ Keep the same prompts on every computer or browser profile. Sync is **optional**
 - Your data is encrypted in the browser with **AES-GCM**, using a key derived from your password with **PBKDF2-SHA-256**, before it is sent. GitHub only receives the encrypted file `simplestprompt-data.json` (plus salt, IV and algorithm info), never your prompts or your password.
 - The **password is kept only while the side panel is open**. If you lose it, nobody (including you and GitHub) can recover the encrypted backup.
 - The **token is saved locally** in the extension so you do not retype it, and is never uploaded, exported or exposed to web pages.
-- Use a **private (secret) Gist** and a strong password.
+- Use a **secret Gist** and a strong password. GitHub secret Gists are unlisted, not access-restricted: anyone with the link can view the encrypted file. Your sync password protects its contents.
 
 ## Troubleshooting
 
@@ -156,6 +168,7 @@ Stored in `chrome.storage.local`:
 | `aiTargets` | AI services (name, base URL, query parameter, paste fallback) |
 | `selectionPrompts` | Selection prompt templates using `{{text}}` |
 | `syncConfig` | Local token and Gist metadata; **never** part of the sync payload |
+| `language` | Local interface language (`en` or `ru`); **never** synced or exported |
 
 The first five keys form the encrypted sync payload.
 
@@ -221,8 +234,15 @@ Selection prompt:
 | `background.js` | Context menus, clipboard, auto-paste, AI on Selection, Gist requests |
 | `sidepanel.html` / `sidepanel.js` | Side panel layout and logic |
 | `crypto.js` | PBKDF2 / AES-GCM encryption for sync |
+| `i18n.js` | Shared English/Russian interface catalogue and language preference |
 | `content.js` | Gemini input helper (runs only on `gemini.google.com`) |
 | `icons/` | Extension icons (16, 48, 128) |
+
+### Development checks
+
+No dependencies or build step are required. With Node.js installed, run `node --test tests/i18n.test.cjs` for localization and context-menu checks, and `node --check` on `background.js`, `sidepanel.js`, `content.js`, `crypto.js` and `i18n.js` for syntax checks.
+
+For real-DOM panel checks, serve the repository locally (for example `python -m http.server 8765 --bind 127.0.0.1`) and open `http://127.0.0.1:8765/tests/panel.test.html`. This harness uses isolated test data and substitutes only the Chrome APIs; it does not access your installed extension's storage or contact GitHub. After a source change, reload the unpacked extension and manually check the actual page context menus and Gemini integration as well.
 
 ## Permissions
 

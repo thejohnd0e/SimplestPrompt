@@ -99,6 +99,13 @@
       color: var(--text-primary);
       border-color: var(--border);
     }
+    .settings-tab { margin-left: auto; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .settings-tab svg { width: 18px; height: 18px; }
+    .tab-btn:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+    .tabs { align-items: center; }
+    .toolbar-btns { flex-wrap: wrap; }
+    .section-header { flex-wrap: wrap; }
+    .modal-inner .buttons { flex-wrap: wrap; }
     .tab-content {
       display: flex;
       flex-direction: column;
@@ -357,6 +364,12 @@
     .sync-field select { width: 100%; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #161616; color: var(--text-primary); }
     .sync-help { color: var(--text-secondary); font-size: 11px; line-height: 1.45; margin: 4px 0 12px; }
     .sync-help a { color: #8fc7ff; }
+    .sync-guide { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 14px; }
+    .sync-guide summary { color: var(--text-primary); cursor: pointer; font-size: 12px; font-weight: 600; }
+    .sync-guide h3 { color: var(--text-primary); font-size: 12px; margin: 12px 0 6px; }
+    .sync-guide ol { padding-left: 20px; margin: 6px 0; }
+    .sync-guide li { margin-bottom: 6px; }
+    .sync-guide p { margin: 8px 0 0; }
     .sync-warning { color: #e8c27a; font-size: 11px; line-height: 1.45; margin-top: 10px; }
     .sync-advanced { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 10px; }
     .sync-advanced summary { color: var(--text-secondary); cursor: pointer; font-size: 11px; }
@@ -368,23 +381,25 @@
     <h1>SimplestPrompt <span class="version" id="appVersion">(v)</span></h1>
   </div>
   <div class="tabs">
-    <button type="button" class="tab-btn active" id="tabPromptsBtn" data-tab="prompts">Prompts</button>
-    <button type="button" class="tab-btn" id="tabAiBtn" data-tab="ai">AI on Selection</button>
-    <button type="button" class="tab-btn" id="tabSyncBtn" data-tab="sync">Sync</button>
+    <button type="button" class="tab-btn active" id="tabPromptsBtn" data-tab="prompts" data-i18n="Prompts">Prompts</button>
+    <button type="button" class="tab-btn" id="tabAiBtn" data-tab="ai" data-i18n="AI on Selection">AI on Selection</button>
+    <button type="button" class="tab-btn settings-tab" id="tabSettingsBtn" data-tab="settings" title="Settings" aria-label="Settings" aria-controls="tabSettings" aria-pressed="false" data-i18n-title="Settings" data-i18n-aria-label="Settings">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 3h5l.7 3 2 .9 2.7-.9 2.5 4.3-2.1 2.1.2 2.2 1.9 2-2.5 4.3-2.8-.8-2 .9-.6 3h-5l-.7-3-2-.9-2.7.9L1.6 17l2.1-2.1-.2-2.2-1.9-2L4.1 6.4l2.8.8 2-.9z" transform="translate(0 -1.5) scale(1 .95)"/><circle cx="12" cy="12" r="3.2"/></svg>
+    </button>
   </div>
 
   <div id="tabPrompts" class="tab-content">
     <div class="toolbar">
       <label class="toggle-row">
         <input type="checkbox" id="autoPaste" />
-        <span>Auto-paste into focused field</span>
+        <span data-i18n="Auto-paste into focused field">Auto-paste into focused field</span>
       </label>
-      <input type="search" class="search-input" id="promptSearch" placeholder="Search prompts" autocomplete="off" />
+      <input type="search" class="search-input" id="promptSearch" placeholder="Search prompts" data-i18n-placeholder="Search prompts" autocomplete="off" />
       <div class="toolbar-btns">
-        <button type="button" class="btn" id="exportBtn">Export</button>
-        <button type="button" class="btn" id="importBtn">Import</button>
-        <button type="button" class="btn" id="addFolder">+ Folder</button>
-        <button type="button" class="btn" id="addPrompt">+ Prompt</button>
+        <button type="button" class="btn" id="exportBtn" data-i18n="Export">Export</button>
+        <button type="button" class="btn" id="importBtn" data-i18n="Import">Import</button>
+        <button type="button" class="btn" id="addFolder" data-i18n="+ Folder">+ Folder</button>
+        <button type="button" class="btn" id="addPrompt" data-i18n="+ Prompt">+ Prompt</button>
         <input type="file" id="importFile" accept=".json,application/json" class="hidden" />
       </div>
     </div>
@@ -396,7 +411,7 @@
       </div>
     </div>
     <div class="hint">
-      <span>Drag and drop to arrange. Double-click to edit.</span>
+      <span data-i18n="Drag and drop to arrange. Double-click to edit.">Drag and drop to arrange. Double-click to edit.</span>
       <a href="https://github.com/thejohnd0e/SimplestPrompt" target="_blank" rel="noopener noreferrer">GitHub</a>
     </div>
   </div>
@@ -405,67 +420,89 @@
     <div class="ai-toolbar">
       <label class="toggle-row">
         <input type="checkbox" id="aiSelectionEnabled" />
-        <span>Enable AI on Selection</span>
+        <span data-i18n="Enable AI on Selection">Enable AI on Selection</span>
       </label>
       <div class="toolbar-btns">
-        <button type="button" class="btn" id="aiExportBtn">Export</button>
-        <button type="button" class="btn" id="aiImportBtn">Import</button>
+        <button type="button" class="btn" id="aiExportBtn" data-i18n="Export">Export</button>
+        <button type="button" class="btn" id="aiImportBtn" data-i18n="Import">Import</button>
         <input type="file" id="aiImportFile" accept=".json,application/json" class="hidden" />
       </div>
-      <button type="button" class="btn" id="loadDefaults">Load default prompts &amp; targets</button>
+      <button type="button" class="btn" id="loadDefaults" data-i18n="Load default prompts &amp; targets">Load default prompts &amp; targets</button>
     </div>
     <div class="ai-content">
       <div class="section">
         <div class="section-header">
-          <div class="section-title">AI Targets</div>
-          <button type="button" class="btn" id="addAiTarget">+ Target</button>
+          <div class="section-title" data-i18n="AI Targets">AI Targets</div>
+          <button type="button" class="btn" id="addAiTarget" data-i18n="+ Target">+ Target</button>
         </div>
         <div id="aiTargetsList"></div>
       </div>
       <div class="section">
         <div class="section-header">
-          <div class="section-title">Selection Prompts</div>
-          <button type="button" class="btn" id="addSelectionPrompt">+ Prompt</button>
+          <div class="section-title" data-i18n="Selection Prompts">Selection Prompts</div>
+          <button type="button" class="btn" id="addSelectionPrompt" data-i18n="+ Prompt">+ Prompt</button>
         </div>
         <div id="selectionPromptsList"></div>
       </div>
     </div>
     <div class="hint">
-      <span>Drag and drop selection prompts to reorder. Double-click to edit.</span>
+      <span data-i18n="Drag and drop selection prompts to reorder. Double-click to edit.">Drag and drop selection prompts to reorder. Double-click to edit.</span>
       <span></span>
     </div>
   </div>
 
-  <div id="tabSync" class="tab-content hidden">
+  <div id="tabSettings" class="tab-content hidden">
     <div class="sync-content">
-      <h2 style="font-size: 18px; margin: 2px 0 14px;">Syncing</h2>
-      <label class="sync-field"><span>Sync backend</span><select id="syncBackend"><option value="github-gist">GitHub Gist</option></select></label>
-      <label class="sync-field"><span>Sync URL</span><input type="text" id="syncGistId" autocomplete="off" placeholder="Gist URL or ID" /></label>
-      <div class="sync-help"><a href="https://gist.github.com/" target="_blank" rel="noopener noreferrer">Create a secret Gist</a>. Leave empty if you want the extension to create one.</div>
-      <label class="sync-field"><span>Gist token</span><input type="password" id="syncToken" autocomplete="off" placeholder="Token with Gist permission" /></label>
-      <div class="sync-help"><a href="https://github.com/settings/tokens/new" target="_blank" rel="noopener noreferrer">Create a token</a> and select the <strong>gist</strong> scope.</div>
-      <label class="sync-field"><span>Sync password</span><input type="password" id="syncPassphrase" autocomplete="off" placeholder="Used to encrypt your prompts" /></label>
-      <div class="sync-help">Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.</div>
-      <button type="button" class="btn" id="syncSaveConnection">Enable syncing</button>
-      <button type="button" class="btn" id="syncCreateGist">Create a private Gist</button>
+      <h2 style="font-size: 18px; margin: 2px 0 14px;" data-i18n="Settings">Settings</h2>
+      <label class="sync-field"><span data-i18n="Language">Language</span><select id="languageSelect"><option value="en" lang="en">English</option><option value="ru" lang="ru">Русский</option></select></label>
+      <div class="sync-help" data-i18n="Language is saved in this browser only.">Language is saved in this browser only.</div>
+      <h2 style="font-size: 16px; margin: 18px 0 12px;" data-i18n="Syncing">Syncing</h2>
+      <details class="sync-guide sync-help">
+        <summary data-i18n="How to set up sync">How to set up sync</summary>
+        <p data-i18n="guide.intro">Keep your prompts and settings in sync between browsers using GitHub. You need a free GitHub account. A Gist is a file stored on GitHub; this extension uploads only encrypted data.</p>
+        <h3 data-i18n="First browser">First browser</h3>
+        <ol>
+          <li data-i18n-html="guide.token"></li>
+          <li data-i18n-html="guide.password"></li>
+          <li data-i18n-html="guide.create"></li>
+          <li data-i18n-html="guide.url"></li>
+        </ol>
+        <h3 data-i18n="Another browser">Another browser</h3>
+        <ol>
+          <li data-i18n-html="guide.connect"></li>
+          <li data-i18n-html="guide.download"></li>
+        </ol>
+        <p data-i18n-html="guide.daily"></p>
+        <p data-i18n="guide.storage"></p>
+        <p data-i18n="guide.secret"></p>
+      </details>
+      <label class="sync-field"><span data-i18n="Sync backend">Sync backend</span><select id="syncBackend"><option value="github-gist">GitHub Gist</option></select></label>
+      <label class="sync-field"><span data-i18n="Sync URL">Sync URL</span><input type="text" id="syncGistId" autocomplete="off" placeholder="Gist URL or ID" data-i18n-placeholder="Gist URL or ID" /></label>
+      <div class="sync-help" data-i18n-html="help.url"></div>
+      <label class="sync-field"><span data-i18n="Gist token">Gist token</span><input type="password" id="syncToken" autocomplete="off" placeholder="Token with Gist permission" /></label>
+      <div class="sync-help" data-i18n-html="help.token"></div>
+      <label class="sync-field"><span data-i18n="Sync password">Sync password</span><input type="password" id="syncPassphrase" autocomplete="off" placeholder="Used to encrypt your prompts" data-i18n-placeholder="Used to encrypt your prompts" /></label>
+      <div class="sync-help" data-i18n="Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.">Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.</div>
+      <button type="button" class="btn" id="syncSaveConnection" data-i18n="Enable syncing">Enable syncing</button>
+      <button type="button" class="btn" id="syncCreateGist" data-i18n="Create a private Gist">Create a private Gist</button>
       <div class="sync-status" id="syncStatus" data-state="idle">
         <div class="title" id="syncStatusTitle">Sync is not configured</div>
         <div class="meta" id="syncStatusMeta">Add your Gist token and sync password to get started.</div>
         <div class="sync-actions">
-          <button type="button" class="btn" id="syncSync">Sync now</button>
-          <button type="button" class="btn danger" id="syncDisconnect">Disconnect</button>
+          <button type="button" class="btn" id="syncSync" data-i18n="Sync now">Sync now</button>
+          <button type="button" class="btn danger" id="syncDisconnect" data-i18n="Disconnect">Disconnect</button>
         </div>
       </div>
       <details class="sync-advanced">
-        <summary>Advanced: choose a version manually</summary>
+        <summary data-i18n="Advanced: choose a version manually">Advanced: choose a version manually</summary>
         <div class="sync-actions">
-          <button type="button" class="btn" id="syncPull">Use remote version</button>
-          <button type="button" class="btn" id="syncPush">Upload local version</button>
-          <button type="button" class="btn" id="syncCheck">Check remote</button>
+          <button type="button" class="btn" id="syncPull" data-i18n="Use remote version">Use remote version</button>
+          <button type="button" class="btn" id="syncPush" data-i18n="Upload local version">Upload local version</button>
+          <button type="button" class="btn" id="syncCheck" data-i18n="Check remote">Check remote</button>
         </div>
       </details>
     </div>
-    <div class="hint"><span>Manual sync only. Your data stays local unless you enable this.</span><span></span></div>
+    <div class="hint"><span data-i18n="Manual sync only. Your data stays local unless you enable this.">Manual sync only. Your data stays local unless you enable this.</span><span></span></div>
   </div>
 
   <div id="syncConflictModal" class="modal hidden">
@@ -473,9 +510,9 @@
       <h3 id="syncConflictTitle">Remote changes detected</h3>
       <div class="empty" id="syncConflictMessage" style="padding: 8px 0;">The Gist changed since the last sync. Choose which version to keep.</div>
       <div class="buttons">
-        <button type="button" class="btn ghost" id="syncConflictCancel">Cancel</button>
-        <button type="button" class="btn" id="syncConflictRemote">Use remote</button>
-        <button type="button" class="btn" id="syncConflictLocal">Use local</button>
+        <button type="button" class="btn ghost" id="syncConflictCancel" data-i18n="Cancel">Cancel</button>
+        <button type="button" class="btn" id="syncConflictRemote" data-i18n="Use remote">Use remote</button>
+        <button type="button" class="btn" id="syncConflictLocal" data-i18n="Use local">Use local</button>
       </div>
     </div>
   </div>
@@ -483,23 +520,23 @@
   <div id="modalFolder" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalFolderTitle">New folder</h3>
-      <input type="text" id="folderName" placeholder="Folder name" />
+      <input type="text" id="folderName" placeholder="Folder name" data-i18n-placeholder="Folder name" />
       <div class="buttons">
-        <button type="button" class="btn danger left hidden" id="deleteFolder">Delete</button>
-        <button type="button" class="btn ghost" id="cancelFolder">Cancel</button>
-        <button type="button" class="btn" id="saveFolder">Save</button>
+        <button type="button" class="btn danger left hidden" id="deleteFolder" data-i18n="Delete">Delete</button>
+        <button type="button" class="btn ghost" id="cancelFolder" data-i18n="Cancel">Cancel</button>
+        <button type="button" class="btn" id="saveFolder" data-i18n="Save">Save</button>
       </div>
     </div>
   </div>
   <div id="modalPrompt" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalPromptTitle">New prompt</h3>
-      <input type="text" id="promptTitle" placeholder="Title" />
-      <textarea id="promptText" placeholder="Prompt text"></textarea>
+      <input type="text" id="promptTitle" placeholder="Title" data-i18n-placeholder="Title" />
+      <textarea id="promptText" placeholder="Prompt text" data-i18n-placeholder="Prompt text"></textarea>
       <div class="buttons">
-        <button type="button" class="btn danger left hidden" id="deletePrompt">Delete</button>
-        <button type="button" class="btn ghost" id="cancelPrompt">Cancel</button>
-        <button type="button" class="btn" id="savePrompt">Save</button>
+        <button type="button" class="btn danger left hidden" id="deletePrompt" data-i18n="Delete">Delete</button>
+        <button type="button" class="btn ghost" id="cancelPrompt" data-i18n="Cancel">Cancel</button>
+        <button type="button" class="btn" id="savePrompt" data-i18n="Save">Save</button>
       </div>
     </div>
   </div>
@@ -507,17 +544,17 @@
   <div id="modalAiTarget" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalAiTargetTitle">New AI target</h3>
-      <input type="text" id="aiTargetName" placeholder="Name" />
-      <input type="text" id="aiTargetBaseUrl" placeholder="Base URL (https://...)" />
-      <input type="text" id="aiTargetQueryParam" placeholder="Query param (q=)" />
+      <input type="text" id="aiTargetName" placeholder="Name" data-i18n-placeholder="Name" />
+      <input type="text" id="aiTargetBaseUrl" placeholder="Base URL (https://...)" data-i18n-placeholder="Base URL (https://...)" />
+      <input type="text" id="aiTargetQueryParam" placeholder="Query param (q=)" data-i18n-placeholder="Query param (q=)" />
       <label class="toggle-row" style="margin-top:6px;">
         <input type="checkbox" id="aiTargetUsePaste" />
-        <span>Use paste fallback</span>
+        <span data-i18n="Use paste fallback">Use paste fallback</span>
       </label>
       <div class="buttons">
-        <button type="button" class="btn danger left hidden" id="deleteAiTarget">Delete</button>
-        <button type="button" class="btn ghost" id="cancelAiTarget">Cancel</button>
-        <button type="button" class="btn" id="saveAiTarget">Save</button>
+        <button type="button" class="btn danger left hidden" id="deleteAiTarget" data-i18n="Delete">Delete</button>
+        <button type="button" class="btn ghost" id="cancelAiTarget" data-i18n="Cancel">Cancel</button>
+        <button type="button" class="btn" id="saveAiTarget" data-i18n="Save">Save</button>
       </div>
     </div>
   </div>
@@ -525,16 +562,17 @@
   <div id="modalSelectionPrompt" class="modal hidden">
     <div class="modal-inner">
       <h3 id="modalSelectionPromptTitle">New selection prompt</h3>
-      <input type="text" id="selectionPromptName" placeholder="Name" />
-      <textarea id="selectionPromptTemplate" placeholder="Template with {{text}}"></textarea>
+      <input type="text" id="selectionPromptName" placeholder="Name" data-i18n-placeholder="Name" />
+      <textarea id="selectionPromptTemplate" placeholder="Template with {{text}}" data-i18n-placeholder="Template with {{text}}"></textarea>
       <div class="buttons">
-        <button type="button" class="btn danger left hidden" id="deleteSelectionPrompt">Delete</button>
-        <button type="button" class="btn ghost" id="cancelSelectionPrompt">Cancel</button>
-        <button type="button" class="btn" id="saveSelectionPrompt">Save</button>
+        <button type="button" class="btn danger left hidden" id="deleteSelectionPrompt" data-i18n="Delete">Delete</button>
+        <button type="button" class="btn ghost" id="cancelSelectionPrompt" data-i18n="Cancel">Cancel</button>
+        <button type="button" class="btn" id="saveSelectionPrompt" data-i18n="Save">Save</button>
       </div>
     </div>
   </div>
 
+  <script src="i18n.js"></script>
   <script src="crypto.js"></script>
   <script src="sidepanel.js"></script>
 </body>

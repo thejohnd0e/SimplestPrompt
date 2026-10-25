@@ -1,7 +1,12 @@
 /* SimplestPrompt background service worker. Local data plus optional Gist sync. */
 
+importScripts('i18n.js');
+const tr = I18n.t;
+
 const MENU_ROOT = 'rcp_root';
 const AI_MENU_ROOT = 'ai_selection_root';
+// Explicit page contexts keep prompt menus out of the extension icon menu.
+const PAGE_MENU_CONTEXTS = ['page', 'frame', 'selection', 'link', 'editable', 'image', 'video', 'audio'];
 const MAX_FOLDERS = 25;
 const MAX_PROMPTS_PER_FOLDER = 30;
 const SYNC_FILE_NAME = 'simplestprompt-data.json';
@@ -109,14 +114,15 @@ async function getAiSelectionConfig() {
 }
 
 async function buildContextMenu() {
+  await I18n.load();
   await chrome.contextMenus.removeAll();
-  chrome.contextMenus.create({ id: MENU_ROOT, title: 'SimplestPrompt', contexts: ['all'] });
+  chrome.contextMenus.create({ id: MENU_ROOT, title: 'SimplestPrompt', contexts: PAGE_MENU_CONTEXTS });
 
   const folders = await getFolders();
   const withPrompts = folders.filter(f => f.prompts && f.prompts.length > 0);
 
   if (withPrompts.length === 0) {
-    chrome.contextMenus.create({ id: 'rcp_open_panel', parentId: MENU_ROOT, title: 'Add prompts in panel...', contexts: ['all'] });
+    chrome.contextMenus.create({ id: 'rcp_open_panel', parentId: MENU_ROOT, title: tr('Add prompts in panel...'), contexts: PAGE_MENU_CONTEXTS });
   } else {
     const sliceFolders = withPrompts.slice(0, MAX_FOLDERS);
     for (const folder of sliceFolders) {
@@ -124,34 +130,34 @@ async function buildContextMenu() {
         id: 'folder_' + folder.id,
         parentId: MENU_ROOT,
         title: folder.name,
-        contexts: ['all']
+        contexts: PAGE_MENU_CONTEXTS
       });
       const prompts = (folder.prompts || []).slice(0, MAX_PROMPTS_PER_FOLDER);
       for (const p of prompts) {
         chrome.contextMenus.create({
           id: 'prompt_' + p.id,
           parentId: 'folder_' + folder.id,
-          title: (p.title || 'Untitled').substring(0, 50),
-          contexts: ['all']
+          title: (p.title || tr('Untitled')).substring(0, 50),
+          contexts: PAGE_MENU_CONTEXTS
         });
       }
       if ((folder.prompts || []).length > MAX_PROMPTS_PER_FOLDER) {
         chrome.contextMenus.create({
           id: 'more_' + folder.id,
           parentId: 'folder_' + folder.id,
-          title: '... more in panel',
-          contexts: ['all']
+          title: tr('... more in panel'),
+          contexts: PAGE_MENU_CONTEXTS
         });
       }
     }
     if (withPrompts.length > MAX_FOLDERS) {
-      chrome.contextMenus.create({ id: 'rcp_more_folders', parentId: MENU_ROOT, title: '... more in panel', contexts: ['all'] });
+      chrome.contextMenus.create({ id: 'rcp_more_folders', parentId: MENU_ROOT, title: tr('... more in panel'), contexts: PAGE_MENU_CONTEXTS });
     }
   }
 
-  chrome.contextMenus.create({ id: 'rcp_sep1', type: 'separator', parentId: MENU_ROOT, contexts: ['all'] });
-  chrome.contextMenus.create({ id: 'rcp_open_panel_2', parentId: MENU_ROOT, title: 'Open panel', contexts: ['all'] });
-  chrome.contextMenus.create({ id: 'rcp_refresh', parentId: MENU_ROOT, title: 'Refresh menu', contexts: ['all'] });
+  chrome.contextMenus.create({ id: 'rcp_sep1', type: 'separator', parentId: MENU_ROOT, contexts: PAGE_MENU_CONTEXTS });
+  chrome.contextMenus.create({ id: 'rcp_open_panel_2', parentId: MENU_ROOT, title: tr('Open panel'), contexts: PAGE_MENU_CONTEXTS });
+  chrome.contextMenus.create({ id: 'rcp_refresh', parentId: MENU_ROOT, title: tr('Refresh menu'), contexts: PAGE_MENU_CONTEXTS });
 
   await buildAiOnSelectionMenu();
 }
@@ -160,13 +166,13 @@ async function buildAiOnSelectionMenu() {
   const { aiOnSelectionEnabled, aiTargets, selectionPrompts } = await getAiSelectionConfig();
   if (!aiOnSelectionEnabled) return;
 
-  chrome.contextMenus.create({ id: AI_MENU_ROOT, title: 'AI on Selection', contexts: ['selection'] });
+  chrome.contextMenus.create({ id: AI_MENU_ROOT, title: tr('AI on Selection'), contexts: ['selection'] });
 
   if (selectionPrompts.length === 0) {
     chrome.contextMenus.create({
       id: 'ai_open_panel_empty_prompts',
       parentId: AI_MENU_ROOT,
-      title: 'Add selection prompts in panel...',
+      title: tr('Add selection prompts in panel...'),
       contexts: ['selection']
     });
     return;
@@ -176,7 +182,7 @@ async function buildAiOnSelectionMenu() {
     chrome.contextMenus.create({
       id: 'ai_open_panel_empty_targets',
       parentId: AI_MENU_ROOT,
-      title: 'Add AI targets in panel...',
+      title: tr('Add AI targets in panel...'),
       contexts: ['selection']
     });
     return;
@@ -187,14 +193,14 @@ async function buildAiOnSelectionMenu() {
     chrome.contextMenus.create({
       id: promptId,
       parentId: AI_MENU_ROOT,
-      title: (sp.name || 'Untitled').substring(0, 50),
+      title: (sp.name || tr('Untitled')).substring(0, 50),
       contexts: ['selection']
     });
     for (const target of aiTargets) {
       chrome.contextMenus.create({
         id: `ai_target__${sp.id}__${target.id}`,
         parentId: promptId,
-        title: (target.name || 'AI').substring(0, 50),
+        title: (target.name || tr('AI')).substring(0, 50),
         contexts: ['selection']
       });
     }
@@ -203,12 +209,14 @@ async function buildAiOnSelectionMenu() {
   chrome.contextMenus.create({
     id: 'ai_open_panel',
     parentId: AI_MENU_ROOT,
-    title: 'Open panel',
+    title: tr('Open panel'),
     contexts: ['selection']
   });
 }
 
-function showToast(message) {
+async function showToast(message) {
+  await I18n.load();
+  message = tr(message);
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs[0];
     if (!tab || !tab.id) return;
@@ -738,7 +746,7 @@ chrome.runtime.onInstalled.addListener(async () => {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && (changes.folders || changes.quickAccessData || changes.aiTargets || changes.selectionPrompts || changes.aiOnSelectionEnabled))
+  if (area === 'local' && (changes.folders || changes.quickAccessData || changes.aiTargets || changes.selectionPrompts || changes.aiOnSelectionEnabled || changes.language))
     debouncedRebuild();
 });
 
