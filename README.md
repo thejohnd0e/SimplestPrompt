@@ -130,7 +130,7 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 | Another browser changed the Gist | The change is downloaded on the next check, when nothing changed locally |
 | Both sides changed | Nothing is overwritten silently: you choose the local or the Gist version (data is not merged) |
 | Your token expired or was rejected | The status says so. Create a new token, paste it into **Gist token** and click **Enable syncing**. The previous connection stays unchanged until GitHub accepts the new one |
-| You want a specific version | Use **Troubleshooting: overwrite one side** |
+| You want a specific version | Use **Data differs? Choose which copy to keep** |
 | You want to stop | Click **Disconnect** (removes the saved token, password and Gist from this browser; the Gist on GitHub is kept) |
 
 ### Security
