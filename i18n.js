@@ -35,7 +35,7 @@ globalThis.I18n = (() => {
     'Used to encrypt your prompts': 'Для шифрования ваших промптов',
     'Sync is not configured': 'Синхронизация не настроена',
     'Disconnect': 'Отключить',
-    'Data differs? Choose which copy to keep': 'Данные не совпадают? Выберите, какую копию оставить',
+    'Choose a version manually': 'Выбрать версию вручную',
     'Use the Gist version': 'Оставить версию из Gist',
     'Use the version from this browser': 'Оставить версию из этого браузера',
     'Remote changes detected': 'В Gist обнаружены изменения',
