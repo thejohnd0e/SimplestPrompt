@@ -10,27 +10,57 @@ const PAGE_MENU_CONTEXTS = ['page', 'frame', 'selection', 'link', 'editable', 'i
 const MAX_FOLDERS = 25;
 const MAX_PROMPTS_PER_FOLDER = 30;
 const SYNC_FILE_NAME = 'simplestprompt-data.json';
+let syncConfigWrites = Promise.resolve();
 
 async function getSyncConfig() {
   const { syncConfig } = await chrome.storage.local.get({ syncConfig: {} });
   return syncConfig && typeof syncConfig === 'object' ? syncConfig : {};
 }
 
-async function saveSyncConfig(patch) {
-  const current = await getSyncConfig();
-  const next = { ...current, ...patch };
-  await chrome.storage.local.set({ syncConfig: next });
-  return next;
+function mutateSyncConfig(update) {
+  const operation = syncConfigWrites.then(async () => {
+    const current = await getSyncConfig();
+    const next = update(current);
+    if (next === null) await chrome.storage.local.remove('syncConfig');
+    else await chrome.storage.local.set({ syncConfig: next });
+    return next;
+  });
+  syncConfigWrites = operation.catch(() => {});
+  return operation;
 }
 
-async function githubApi(path, options = {}) {
-  const config = await getSyncConfig();
-  if (!config.token) throw new Error('GitHub token is not configured.');
+// A candidate connection is verified against GitHub and saved only when accepted.
+async function saveSyncConnectionConfig(message) {
+  const current = await getSyncConfig();
+  const token = typeof message.token === 'string' && message.token.trim() || current.token || '';
+  const passphrase = typeof message.passphrase === 'string' && message.passphrase || current.passphrase || '';
+  const gistId = typeof message.gistId === 'string' ? message.gistId.trim() : current.gistId || '';
+  if (!token) throw new Error('Enter a GitHub token first.');
+  if (!passphrase) throw new Error('Enter the encryption passphrase first.');
+  await githubApi(gistId ? '/gists/' + encodeURIComponent(gistId) : '/gists?per_page=1', {}, token);
+  await mutateSyncConfig(latest => {
+    const next = { ...latest, token, passphrase, gistId };
+    if (gistId !== (latest.gistId || '')) {
+      next.lastRemoteRevision = '';
+      next.lastLocalHash = '';
+      next.lastSyncAt = '';
+    }
+    return next;
+  });
+}
+
+async function saveSyncConfig(patch) {
+  return mutateSyncConfig(current => ({ ...current, ...patch }));
+}
+
+async function githubApi(path, options = {}, tokenOverride = '') {
+  const token = tokenOverride || (await getSyncConfig()).token;
+  if (!token) throw new Error('GitHub token is not configured.');
   const response = await fetch('https://api.github.com' + path, {
     ...options,
     headers: {
       Accept: 'application/vnd.github+json',
-      Authorization: 'Bearer ' + config.token,
+      Authorization: 'Bearer ' + token,
       'X-GitHub-Api-Version': '2022-11-28',
       'Content-Type': 'application/json',
       ...(options.headers || {})
@@ -39,6 +69,8 @@ async function githubApi(path, options = {}) {
   const body = await response.text();
   let data = null;
   try { data = body ? JSON.parse(body) : null; } catch (error) {}
+  if (response.status === 401) throw new Error('GitHub rejected the token. It may have expired. Create a new token and enter it above.');
+  if (response.status === 404 && path.startsWith('/gists/')) throw new Error('The Gist was not found. Check the Gist URL.');
   if (!response.ok) {
     throw new Error(data && data.message || `GitHub API error (${response.status}).`);
   }
@@ -47,8 +79,9 @@ async function githubApi(path, options = {}) {
 
 function getGistRemote(gist) {
   const file = gist && gist.files && gist.files[SYNC_FILE_NAME];
-  if (!file || typeof file.content !== 'string') throw new Error('The selected Gist does not contain SimplestPrompt data.');
-  const revision = gist.history && gist.history[0] && gist.history[0].version || gist.updated_at || '';
+  const revision = gist && gist.history && gist.history[0] && gist.history[0].version || gist && gist.updated_at || '';
+  // A Gist without our file is usable: the first sync uploads it.
+  if (!file || typeof file.content !== 'string') return { content: '', empty: true, revision, htmlUrl: gist && gist.html_url || '' };
   return { content: file.content, revision, htmlUrl: gist.html_url || '' };
 }
 
@@ -831,6 +864,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
       success: true,
       state: {
         hasToken: !!config.token,
+        passphrase: config.passphrase || '',
         gistId: config.gistId || '',
         revision: config.lastRemoteRevision || '',
         localHash: config.lastLocalHash || '',
@@ -840,17 +874,9 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg.action === 'syncSaveConfig') {
-    const patch = {};
-    if (msg.token) patch.token = String(msg.token).trim();
-    if (typeof msg.gistId === 'string') patch.gistId = msg.gistId.trim();
-    getSyncConfig().then((current) => {
-      if (Object.prototype.hasOwnProperty.call(patch, 'gistId') && patch.gistId !== current.gistId) {
-        patch.lastRemoteRevision = '';
-        patch.lastLocalHash = '';
-        patch.lastSyncAt = '';
-      }
-      return saveSyncConfig(patch);
-    }).then(() => sendResponse({ success: true })).catch(e => sendResponse({ success: false, error: e.message }));
+    saveSyncConnectionConfig(msg).then(() => sendResponse({ success: true })).catch(error => {
+      sendResponse({ success: false, error: error.message });
+    });
     return true;
   }
   if (msg.action === 'syncMarkRevision') {
@@ -879,7 +905,7 @@ chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
     return true;
   }
   if (msg.action === 'syncClear') {
-    chrome.storage.local.remove('syncConfig').then(() => sendResponse({ success: true }))
+    mutateSyncConfig(() => null).then(() => sendResponse({ success: true }))
       .catch(e => sendResponse({ success: false, error: e.message }));
     return true;
   }

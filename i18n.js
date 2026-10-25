@@ -26,25 +26,18 @@ globalThis.I18n = (() => {
     'How to set up sync': 'Как настроить синхронизацию',
     'First browser': 'Первый браузер',
     'Another browser': 'Другой браузер',
-    'Sync backend': 'Хранилище синхронизации',
-    'Sync URL': 'Ссылка на Gist',
-    'Gist URL or ID': 'Ссылка или идентификатор Gist',
+    'Paste a Gist link, or leave empty': 'Вставьте ссылку на Gist или оставьте пустым',
+    'Update connection': 'Обновить подключение',
+    'That is not a Gist link. A Gist link looks like https://gist.github.com/your-name/0123abc… Leave the field empty to create a Gist automatically.': 'Это не ссылка на Gist. Ссылка на Gist выглядит так: https://gist.github.com/ваше-имя/0123abc… Оставьте поле пустым, чтобы Gist создался автоматически.',
     'Gist token': 'Токен GitHub',
     'Token with Gist permission': 'Токен с разрешением gist',
     'Sync password': 'Пароль синхронизации',
     'Used to encrypt your prompts': 'Для шифрования ваших промптов',
-    'Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.': 'Промпты шифруются перед отправкой. Пароль хранится только пока открыта эта панель. Если вы его потеряете, открыть зашифрованную копию будет невозможно.',
-    'Enable syncing': 'Сохранить подключение',
-    'Create a private Gist': 'Создать секретный Gist',
     'Sync is not configured': 'Синхронизация не настроена',
-    'Add your Gist token and sync password to get started.': 'Для начала введите токен GitHub и пароль синхронизации.',
-    'Sync now': 'Синхронизировать',
     'Disconnect': 'Отключить',
     'Advanced: choose a version manually': 'Дополнительно: выбрать версию вручную',
     'Use remote version': 'Загрузить версию из Gist',
     'Upload local version': 'Отправить локальную версию',
-    'Check remote': 'Проверить Gist',
-    'Manual sync only. Your data stays local unless you enable this.': 'Синхронизация только вручную. Пока вы её не включили, данные остаются в браузере.',
     'Remote changes detected': 'В Gist обнаружены изменения',
     'Choose sync version': 'Выберите версию данных',
     'The Gist changed since the last sync. Choose which version to keep.': 'После последней синхронизации Gist изменился. Выберите, какую версию сохранить.',
@@ -98,29 +91,16 @@ globalThis.I18n = (() => {
     'Operation failed. Detail: {detail}': 'Не удалось выполнить операцию. Подробности: {detail}',
     'Error': 'Ошибка',
     'Ready': 'Готово',
-    'Almost ready': 'Почти готово',
-    'Create a private Gist or paste an existing Gist URL.': 'Создайте секретный Gist или вставьте ссылку на существующий.',
     'Gist: {id}': 'Gist: {id}',
-    'No Gist selected.': 'Gist не выбран.',
     'Last sync: {date}': 'Последняя синхронизация: {date}',
     'No successful sync yet.': 'Успешных синхронизаций ещё не было.',
     'Remote data has an invalid format.': 'Данные в Gist имеют неверный формат.',
     'Enter the encryption passphrase first.': 'Сначала введите пароль синхронизации.',
-    'Enter and save a GitHub token first.': 'Сначала введите и сохраните токен GitHub.',
-    'Enter a Gist URL or create a private Gist first.': 'Сначала введите ссылку на Gist или создайте секретный Gist.',
     'Enter a GitHub token first.': 'Сначала введите токен GitHub.',
-    'Already up to date. No changes to upload or download.': 'Данные уже актуальны. Нет изменений для отправки или загрузки.',
-    'Remote version available': 'В Gist доступна версия данных',
-    'Pull it before pushing local data.': 'Загрузите её перед отправкой локальных данных.',
-    'No remote changes detected.': 'В Gist нет новых изменений.',
-    'Choose Pull to review and apply the remote version.': 'Нажмите «Загрузить версию из Gist», чтобы применить её.',
-    'Click Sync now when you are ready.': 'Нажмите «Синхронизировать», когда будете готовы.',
-    'Create a private Gist to finish setup.': 'Создайте секретный Gist, чтобы завершить настройку.',
     'Downloading and decrypting the remote version...': 'Загрузка и расшифровка версии из Gist…',
     'Encrypting and uploading the local version...': 'Шифрование и отправка локальной версии…',
     'GitHub token is not configured.': 'Токен GitHub не настроен.',
     'Gist ID is not configured.': 'Идентификатор Gist не настроен.',
-    'The selected Gist does not contain SimplestPrompt data.': 'В выбранном Gist нет данных SimplestPrompt.',
     'GitHub API error ({status}).': 'Ошибка API GitHub ({status}).',
     'Encryption passphrase is required.': 'Необходим пароль синхронизации.',
     'Unsupported or invalid encrypted sync format.': 'Неподдерживаемый или неверный формат зашифрованных данных.',
@@ -137,53 +117,31 @@ globalThis.I18n = (() => {
     'Failed to copy': 'Не удалось скопировать',
     'Blocked on browser internal pages. Use a regular website tab.': 'На внутренних страницах браузера это недоступно. Откройте обычный сайт.',
     'Menu refreshed': 'Меню обновлено',
-    'guide.intro': {
-      en: 'Keep your prompts and settings in sync between browsers using GitHub. You need a free GitHub account. A Gist is a file stored on GitHub; this extension uploads only encrypted data.',
-      ru: 'Синхронизируйте промпты и настройки между браузерами через GitHub. Нужна бесплатная учётная запись GitHub. Gist — файл на GitHub; расширение отправляет только зашифрованные данные.'
-    },
-    'guide.token': {
-      en: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Create a GitHub token (classic)</a>. Select only the <strong>gist</strong> permission, click <strong>Generate token</strong>, then copy the token into <strong>Gist token</strong> below. Treat it like a password: it grants access to your Gists.',
-      ru: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Создайте токен GitHub (classic)</a>. Выберите только разрешение <strong>gist</strong>, нажмите <strong>Generate token</strong> и скопируйте токен в поле <strong>Токен GitHub</strong> ниже. Храните его как пароль: он даёт доступ к вашим Gist.'
-    },
-    'guide.password': {
-      en: 'Choose a strong <strong>Sync password</strong> and enter it below. This is a separate encryption password, not your GitHub password. Keep it somewhere safe: it cannot be recovered.',
-      ru: 'Придумайте надёжный <strong>Пароль синхронизации</strong> и введите его ниже. Это отдельный пароль шифрования, не пароль GitHub. Сохраните его в надёжном месте: восстановить его нельзя.'
-    },
-    'guide.create': {
-      en: 'Leave <strong>Sync URL</strong> empty and click <strong>Create a private Gist</strong>. This immediately uploads an encrypted copy of your current data and saves the connection. No need to create a Gist on GitHub yourself.',
-      ru: 'Оставьте поле <strong>Ссылка на Gist</strong> пустым и нажмите <strong>Создать секретный Gist</strong>. Зашифрованная копия текущих данных сразу отправится на GitHub, а подключение сохранится. Создавать Gist на сайте вручную не нужно.'
-    },
-    'guide.url': {
-      en: 'Keep the Gist URL that appears in <strong>Sync URL</strong>: you will need it in your other browser.',
-      ru: 'Сохраните адрес из поля <strong>Ссылка на Gist</strong>: он понадобится в другом браузере.'
-    },
-    'guide.connect': {
-      en: 'Enter your GitHub token, the same <strong>Sync URL</strong>, and the same <strong>Sync password</strong>. Do not create another Gist.',
-      ru: 'Введите токен GitHub, ту же <strong>Ссылку на Gist</strong> и тот же <strong>Пароль синхронизации</strong>. Не создавайте новый Gist.'
-    },
-    'guide.download': {
-      en: 'Click <strong>Enable syncing</strong>, then <strong>Sync now</strong>. If asked which version to keep, choose <strong>Use remote</strong> to download the data from your first browser; this replaces this browser\'s local data.',
-      ru: 'Нажмите <strong>Сохранить подключение</strong>, затем <strong>Синхронизировать</strong>. Если появится выбор версии, нажмите <strong>Использовать Gist</strong>, чтобы загрузить данные первого браузера. Локальные данные этого браузера будут заменены.'
-    },
-    'guide.daily': {
-      en: '<strong>Day to day:</strong> click <strong>Sync now</strong> after making changes, then click it in your other browser to receive them. Sync does not run automatically. If both copies changed, you choose which one to keep; they are not merged.',
-      ru: '<strong>При обычной работе:</strong> после изменений нажмите <strong>Синхронизировать</strong>, затем нажмите эту кнопку в другом браузере, чтобы получить изменения. Автоматической синхронизации нет. Если изменились обе копии, нужно выбрать одну: данные не объединяются.'
-    },
-    'guide.storage': {
-      en: 'The token is saved only in this browser. The sync password is kept only while this panel is open; enter it again after reopening. Neither is included in the encrypted upload.',
-      ru: 'Токен сохраняется только в этом браузере. Пароль хранится лишь пока панель открыта; после повторного открытия введите его заново. Ни токен, ни пароль не включаются в отправляемые данные.'
-    },
-    'guide.secret': {
-      en: 'A secret Gist is unlisted, not access-restricted: anyone with its link can view the encrypted file. Keep your sync password safe.',
-      ru: 'Секретный Gist скрыт из общего списка, но доступен всем, у кого есть ссылка. Они увидят зашифрованный файл. Берегите пароль синхронизации.'
+    'Enable syncing': 'Включить синхронизацию',
+    'Gist URL': 'Ссылка на Gist',
+    'Your data stays local unless you enable syncing.': 'Пока вы не включите синхронизацию, данные остаются в браузере.',
+    'Enter the Gist URL, token and password, then click Enable syncing.': 'Введите ссылку на Gist, токен и пароль, затем нажмите «Включить синхронизацию».',
+    'Syncs automatically while this panel is open.': 'Синхронизируется автоматически, пока открыта эта панель.',
+    'Connecting…': 'Подключение…',
+    'Set up syncing first.': 'Сначала настройте синхронизацию.',
+    'The Gist has no SimplestPrompt data yet.': 'В этом Gist ещё нет данных SimplestPrompt.',
+    'GitHub rejected the token. It may have expired. Create a new token and enter it above.': 'GitHub отклонил токен, возможно, срок его действия истёк. Создайте новый токен и введите его выше.',
+    'The Gist was not found. Check the Gist URL.': 'Gist не найден. Проверьте ссылку на Gist.',
+    'help.intro': {
+      en: 'Saves the same data as Export (prompts, folders, AI settings) to a secret GitHub Gist, encrypted, and keeps all your browsers up to date.',
+      ru: 'Сохраняет те же данные, что и экспорт (промпты, папки, настройки ИИ), в секретный Gist на GitHub в зашифрованном виде и обновляет их во всех ваших браузерах.'
     },
     'help.url': {
-      en: 'First browser: leave empty and use <strong>Create a private Gist</strong> below. Another browser: paste the same Gist URL here.',
-      ru: 'Первый браузер: оставьте пустым и нажмите <strong>Создать секретный Gist</strong> ниже. Другой браузер: вставьте сюда ссылку на тот же Gist.'
+      en: 'A Gist link looks like <strong>gist.github.com/your-name/…</strong> (not the token page). <a href="https://gist.github.com/" target="_blank" rel="noopener noreferrer">Create a secret Gist</a> and paste its link, or <strong>leave empty</strong> to create one automatically. In other browsers, paste the same link.',
+      ru: 'Ссылка на Gist выглядит так: <strong>gist.github.com/ваше-имя/…</strong> (это не страница токенов). <a href="https://gist.github.com/" target="_blank" rel="noopener noreferrer">Создайте секретный Gist</a> и вставьте его ссылку или <strong>оставьте поле пустым</strong>, чтобы Gist создался автоматически. В других браузерах вставьте ту же ссылку.'
     },
     'help.token': {
-      en: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Create a token (classic)</a> with only the <strong>gist</strong> permission. This lets the extension read and update your Gist.',
-      ru: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Создайте токен (classic)</a> только с разрешением <strong>gist</strong>. Это позволит расширению читать и обновлять ваши Gist.'
+      en: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Create a token (classic)</a> with only the <strong>gist</strong> permission and paste the generated token here. Set <strong>Expiration</strong> to <strong>No expiration</strong>, otherwise syncing stops when the token expires. It is saved in this browser only.',
+      ru: '<a href="https://github.com/settings/tokens/new?scopes=gist&amp;description=SimplestPrompt" target="_blank" rel="noopener noreferrer">Создайте токен (classic)</a> только с разрешением <strong>gist</strong> и вставьте сюда созданный токен. В поле <strong>Expiration</strong> выберите <strong>No expiration</strong> (без срока действия), иначе синхронизация остановится, когда токен истечёт. Он хранится только в этом браузере.'
+    },
+    'help.password': {
+      en: '<strong>Required.</strong> Make up any password (it is not your GitHub password). It encrypts your data; enter the same one in your other browsers. If you lose it, the encrypted copy cannot be opened.',
+      ru: '<strong>Обязательное поле.</strong> Придумайте любой пароль (это не пароль от GitHub). Он шифрует данные; в других браузерах введите тот же. Если вы его потеряете, зашифрованную копию не открыть.'
     }
   };
 

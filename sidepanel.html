@@ -358,19 +358,17 @@
     .sync-status[data-state="error"] .title { color: #ffb6b6; }
     .sync-status[data-state="error"] .meta { color: #f0caca; }
     .sync-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+    .btn:disabled { opacity: 0.6; cursor: wait; }
     .sync-field { display: block; margin-bottom: 10px; }
     .sync-field span { display: block; color: var(--text-primary); font-size: 12px; margin-bottom: 5px; }
     .sync-field input { width: 100%; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #161616; color: var(--text-primary); }
     .sync-field select { width: 100%; min-height: 30px; padding: 0 9px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: #161616; color: var(--text-primary); }
+    .sync-group { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 12px; }
+    .sync-group .sync-field { margin-bottom: 0; }
+    .sync-group .sync-help { margin: 6px 0 0; }
+    #syncSaveConnection { margin-bottom: 12px; }
     .sync-help { color: var(--text-secondary); font-size: 11px; line-height: 1.45; margin: 4px 0 12px; }
     .sync-help a { color: #8fc7ff; }
-    .sync-guide { background: var(--bg-surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; margin-bottom: 14px; }
-    .sync-guide summary { color: var(--text-primary); cursor: pointer; font-size: 12px; font-weight: 600; }
-    .sync-guide h3 { color: var(--text-primary); font-size: 12px; margin: 12px 0 6px; }
-    .sync-guide ol { padding-left: 20px; margin: 6px 0; }
-    .sync-guide li { margin-bottom: 6px; }
-    .sync-guide p { margin: 8px 0 0; }
-    .sync-warning { color: #e8c27a; font-size: 11px; line-height: 1.45; margin-top: 10px; }
     .sync-advanced { border-top: 1px solid var(--border); margin-top: 14px; padding-top: 10px; }
     .sync-advanced summary { color: var(--text-secondary); cursor: pointer; font-size: 11px; }
     .sync-advanced[open] summary { margin-bottom: 10px; }
@@ -457,39 +455,24 @@
       <label class="sync-field"><span data-i18n="Language">Language</span><select id="languageSelect"><option value="en" lang="en">English</option><option value="ru" lang="ru">Русский</option></select></label>
       <div class="sync-help" data-i18n="Language is saved in this browser only.">Language is saved in this browser only.</div>
       <h2 style="font-size: 16px; margin: 18px 0 12px;" data-i18n="Syncing">Syncing</h2>
-      <details class="sync-guide sync-help">
-        <summary data-i18n="How to set up sync">How to set up sync</summary>
-        <p data-i18n="guide.intro">Keep your prompts and settings in sync between browsers using GitHub. You need a free GitHub account. A Gist is a file stored on GitHub; this extension uploads only encrypted data.</p>
-        <h3 data-i18n="First browser">First browser</h3>
-        <ol>
-          <li data-i18n-html="guide.token"></li>
-          <li data-i18n-html="guide.password"></li>
-          <li data-i18n-html="guide.create"></li>
-          <li data-i18n-html="guide.url"></li>
-        </ol>
-        <h3 data-i18n="Another browser">Another browser</h3>
-        <ol>
-          <li data-i18n-html="guide.connect"></li>
-          <li data-i18n-html="guide.download"></li>
-        </ol>
-        <p data-i18n-html="guide.daily"></p>
-        <p data-i18n="guide.storage"></p>
-        <p data-i18n="guide.secret"></p>
-      </details>
-      <label class="sync-field"><span data-i18n="Sync backend">Sync backend</span><select id="syncBackend"><option value="github-gist">GitHub Gist</option></select></label>
-      <label class="sync-field"><span data-i18n="Sync URL">Sync URL</span><input type="text" id="syncGistId" autocomplete="off" placeholder="Gist URL or ID" data-i18n-placeholder="Gist URL or ID" /></label>
-      <div class="sync-help" data-i18n-html="help.url"></div>
-      <label class="sync-field"><span data-i18n="Gist token">Gist token</span><input type="password" id="syncToken" autocomplete="off" placeholder="Token with Gist permission" /></label>
-      <div class="sync-help" data-i18n-html="help.token"></div>
-      <label class="sync-field"><span data-i18n="Sync password">Sync password</span><input type="password" id="syncPassphrase" autocomplete="off" placeholder="Used to encrypt your prompts" data-i18n-placeholder="Used to encrypt your prompts" /></label>
-      <div class="sync-help" data-i18n="Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.">Your prompts are encrypted before upload. This password is remembered only while this panel is open. If you lose it, the encrypted backup cannot be opened.</div>
+      <div class="sync-help" data-i18n="help.intro"></div>
+      <div class="sync-group">
+        <label class="sync-field"><span data-i18n="Gist URL">Gist URL</span><input type="text" id="syncGistId" autocomplete="off" placeholder="Paste a Gist link, or leave empty" data-i18n-placeholder="Paste a Gist link, or leave empty" /></label>
+        <div class="sync-help" data-i18n-html="help.url"></div>
+      </div>
+      <div class="sync-group">
+        <label class="sync-field"><span data-i18n="Gist token">Gist token</span><input type="password" id="syncToken" autocomplete="off" placeholder="Token with Gist permission" data-i18n-placeholder="Token with Gist permission" /></label>
+        <div class="sync-help" data-i18n-html="help.token"></div>
+      </div>
+      <div class="sync-group">
+        <label class="sync-field"><span data-i18n="Sync password">Sync password</span><input type="password" id="syncPassphrase" autocomplete="off" placeholder="Used to encrypt your prompts" data-i18n-placeholder="Used to encrypt your prompts" /></label>
+        <div class="sync-help" data-i18n-html="help.password"></div>
+      </div>
       <button type="button" class="btn" id="syncSaveConnection" data-i18n="Enable syncing">Enable syncing</button>
-      <button type="button" class="btn" id="syncCreateGist" data-i18n="Create a private Gist">Create a private Gist</button>
       <div class="sync-status" id="syncStatus" data-state="idle">
         <div class="title" id="syncStatusTitle">Sync is not configured</div>
-        <div class="meta" id="syncStatusMeta">Add your Gist token and sync password to get started.</div>
+        <div class="meta" id="syncStatusMeta">Enter the Gist URL, token and password, then click Enable syncing.</div>
         <div class="sync-actions">
-          <button type="button" class="btn" id="syncSync" data-i18n="Sync now">Sync now</button>
           <button type="button" class="btn danger" id="syncDisconnect" data-i18n="Disconnect">Disconnect</button>
         </div>
       </div>
@@ -498,11 +481,10 @@
         <div class="sync-actions">
           <button type="button" class="btn" id="syncPull" data-i18n="Use remote version">Use remote version</button>
           <button type="button" class="btn" id="syncPush" data-i18n="Upload local version">Upload local version</button>
-          <button type="button" class="btn" id="syncCheck" data-i18n="Check remote">Check remote</button>
         </div>
       </details>
     </div>
-    <div class="hint"><span data-i18n="Manual sync only. Your data stays local unless you enable this.">Manual sync only. Your data stays local unless you enable this.</span><span></span></div>
+    <div class="hint"><span data-i18n="Your data stays local unless you enable syncing.">Your data stays local unless you enable syncing.</span><span></span></div>
   </div>
 
   <div id="syncConflictModal" class="modal hidden">

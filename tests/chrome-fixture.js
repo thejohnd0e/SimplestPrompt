@@ -8,6 +8,9 @@ window.fixtureData = {
 const storageListeners = [];
 window.fixtureMessages = [];
 window.fixtureAlerts = [];
+window.fixtureSaveError = '';
+window.fixtureRemote = { empty: true, content: '', revision: 'rev-0' };
+window.fixtureSyncState = { hasToken: false, passphrase: '', gistId: '', revision: '', localHash: '', lastSyncAt: '' };
 window.alert = message => fixtureAlerts.push(message);
 Object.assign(window.chrome, {
   storage: {
@@ -25,12 +28,32 @@ Object.assign(window.chrome, {
     onChanged: { addListener: listener => storageListeners.push(listener) }
   },
   runtime: {
-    getManifest: () => ({ version: '2.16.0', version_name: '2.16' }),
+    getManifest: () => ({ version: '2.16.2', version_name: '2.16.2' }),
     sendMessage: (message, callback) => {
       fixtureMessages.push(message);
       let response = { success: true };
       if (message.action === 'getAutoPaste') response = { autoPaste: false };
-      if (message.action === 'syncGetState') response.state = { hasToken: false, gistId: '', revision: '', localHash: '', lastSyncAt: '' };
+      if (message.action === 'syncGetState') response.state = structuredClone(fixtureSyncState);
+      if (message.action === 'syncSaveConfig') {
+        if (fixtureSaveError) response = { success: false, error: fixtureSaveError };
+        else fixtureSyncState = { hasToken: true, passphrase: message.passphrase, gistId: message.gistId, revision: '', localHash: '', lastSyncAt: '' };
+      }
+      if (message.action === 'syncFetch') response.remote = structuredClone(fixtureRemote);
+      if (message.action === 'syncUpdate') {
+        window.fixtureRemote = { content: message.content, revision: 'updated-revision' };
+        response.conflict = false;
+        response.revision = 'updated-revision';
+      }
+      if (message.action === 'syncClear') fixtureSyncState = { hasToken: false, passphrase: '', gistId: '', revision: '', localHash: '', lastSyncAt: '' };
+      if (message.action === 'syncCreate') {
+        fixtureSyncState.gistId = 'new-created-gist';
+        window.fixtureRemote = { content: message.content, revision: 'created-revision' };
+        response.revision = 'created-revision';
+      }
+      if (message.action === 'syncMarkRevision') {
+        fixtureSyncState.revision = message.revision;
+        fixtureSyncState.localHash = message.localHash;
+      }
       if (callback) callback(response);
       return Promise.resolve(response);
     }

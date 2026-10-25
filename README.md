@@ -93,7 +93,7 @@ A separate context menu that appears only when text is selected: `AI on Selectio
 
 ### Sync
 
-Optional, manual, end-to-end encrypted sync through a private GitHub Gist, available under **Settings** (the gear button). See [Sync between browsers](#-sync-between-browsers).
+Optional, automatic, end-to-end encrypted sync through a secret GitHub Gist, available under **Settings** (the gear button). See [Sync between browsers](#-sync-between-browsers).
 
 ### Interface language
 
@@ -101,47 +101,41 @@ Open **Settings** (the gear button) and use **Language** at the top to choose **
 
 ## 🔄 Sync between browsers
 
-Keep the same prompts on every computer or browser profile. Sync is **optional** and **manual**: data is uploaded when you click **Create a private Gist**, **Sync now** (when uploading changes), or **Upload local version**. It never runs automatically.
+Keep the same prompts on every computer or browser profile. Sync is **optional**: until you enable it, your data never leaves the browser. Once enabled it runs **automatically** while the side panel is open: changes are uploaded a few seconds after you make them, and the Gist is checked when the panel opens and every few minutes.
 
 **What is synced:** your prompts and folders, AI targets, selection prompts, the AI on Selection switch, and the auto-paste setting.
 **What is never synced:** your GitHub token, your password, the sync settings, and the interface language.
 
-### First browser
+### Set it up
 
-You need a free GitHub account. A **Gist** is a file stored on GitHub; the extension uses it to store an encrypted copy of your prompts and settings. Open **Settings** (the gear button) and scroll to **Syncing**, which also has a collapsible **How to set up sync** guide.
+Open **Settings** (the gear button) and find **Syncing**. There are three fields and one button:
 
-1. **Create a GitHub token (classic).** Open <https://github.com/settings/tokens/new?scopes=gist&description=SimplestPrompt>, select only the **`gist`** permission, click **Generate token**, and copy the token. It gives the extension access to your Gists; treat it like a password.
-2. Open the side panel's **Settings** (gear button), find **Syncing** and paste it into **Gist token**.
-3. **Choose and enter a Sync password.** This is a separate encryption password, not your GitHub password. Keep it somewhere safe: it cannot be recovered.
-4. Leave **Sync URL** empty and click **Create a private Gist**. This immediately uploads your encrypted data and saves the connection; you do not need to create a Gist on GitHub or click **Enable syncing** separately.
-5. Keep the Gist URL shown in **Sync URL** for your other browser.
+1. **Gist URL.** [Create a secret Gist](https://gist.github.com/) and paste its URL, or leave the field empty and the extension creates one for you.
+2. **Gist token.** [Create a token (classic)](https://github.com/settings/tokens/new?scopes=gist&description=SimplestPrompt) with only the **`gist`** permission and paste it. It is saved in this browser only.
+3. **Sync password.** Used to encrypt your data. Choose one and **use the same password in every browser**; it is saved in this browser only.
+4. Click **Enable syncing**. The status box shows the Gist, the **Last sync** time and **Disconnect**. Once sync works, the button is called **Update connection**; use it to enter a new token or Gist.
 
-### Connect another browser
+### Another browser
 
-1. Open **Settings → Syncing** and enter your GitHub token, the **same Gist URL**, and the **same sync password**. Do not create another Gist.
-2. Click **Enable syncing**, then **Sync now**.
-3. If asked which version to keep, choose **Use remote** to download the data from your first browser. This replaces the current browser's local data rather than merging it.
+Enter the **same Gist URL**, your token and the **same password**, then click **Enable syncing**. If this browser has no data, the Gist is downloaded. If it already has data, you are asked once whether to keep the local or the Gist version.
 
-### Using it day to day
+### Good to know
 
-| You want to… | Do this |
+| Situation | What happens |
 | --- | --- |
-| Upload your latest changes | Open **Settings → Syncing** and click **Sync now** |
-| Get changes made in another browser | Click **Sync now** (it downloads them if nothing changed locally) |
-| Set up a new browser | Follow **Connect another browser** above |
-| Check what happened | Read the status box: it shows the Gist and the **Last sync** time; "Already up to date" means there was nothing to upload or download |
-| Pick an older version | Use **Advanced: choose a version manually** |
-| Stop syncing | Click **Disconnect** (removes the saved token and sync settings from this browser) |
-
-**If both sides changed**, the extension never overwrites silently. It asks whether to keep the local or the remote version.
-**On a new, empty browser** the first **Sync now** downloads the Gist automatically. You are only asked to choose when this browser already has data that could be replaced.
+| You edit prompts | They are uploaded automatically a few seconds later |
+| Another browser changed the Gist | The change is downloaded on the next check, when nothing changed locally |
+| Both sides changed | Nothing is overwritten silently: you choose the local or the Gist version (data is not merged) |
+| Your token expired or was rejected | The status says so. Create a new token, paste it into **Gist token** and click **Enable syncing**. The previous connection stays unchanged until GitHub accepts the new one |
+| You want a specific version | Use **Advanced: choose a version manually** |
+| You want to stop | Click **Disconnect** (removes the saved token, password and Gist from this browser; the Gist on GitHub is kept) |
 
 ### Security
 
-- Your data is encrypted in the browser with **AES-GCM**, using a key derived from your password with **PBKDF2-SHA-256**, before it is sent. GitHub only receives the encrypted file `simplestprompt-data.json` (plus salt, IV and algorithm info), never your prompts or your password.
-- The **password is kept only while the side panel is open**. If you lose it, nobody (including you and GitHub) can recover the encrypted backup.
-- The **token is saved locally** in the extension so you do not retype it, and is never uploaded, exported or exposed to web pages.
-- Use a **secret Gist** and a strong password. GitHub secret Gists are unlisted, not access-restricted: anyone with the link can view the encrypted file. Your sync password protects its contents.
+- Your data is encrypted in the browser with **AES-GCM**, using a key derived from your password with **PBKDF2-SHA-256**, before it is sent. GitHub only receives the encrypted file `simplestprompt-data.json` (plus salt, IV and algorithm info), never your prompts, token or password.
+- The **token and the password are saved locally** in the extension (`chrome.storage.local`) so syncing keeps working after a restart. They are never uploaded, exported or exposed to web pages. Anyone with access to your browser profile can read them.
+- If you lose the password, nobody (including you and GitHub) can recover the encrypted copy.
+- A secret Gist is unlisted, not access-restricted: anyone with the link can view the encrypted file. Use a strong password.
 
 ## Troubleshooting
 
@@ -151,8 +145,7 @@ You need a free GitHub account. A **Gist** is a file stored on GitHub; the exten
 | No menu appears | Reload the extension in `chrome://extensions`. Browser pages (`chrome://…`) are not supported. |
 | Version did not change after updating | Click **Reload** on the extension card and check **Source** in the card's Details. Reload only re-reads the folder the extension was loaded from. |
 | My prompts disappeared after switching folders | A different folder means a different install with empty data. Import your JSON export or use sync. |
-| Sync shows an old "Last sync" time | Update to the latest version. Earlier versions did not refresh the time when nothing had changed. |
-| Sync asks for a password every time | By design: the password is never stored, only kept while the side panel is open. |
+| Sync stopped with an error | Read the status box under **Settings → Syncing**. An expired token is the most common cause: create a new token, paste it into **Gist token** and click **Enable syncing**. |
 
 Still stuck? [Open an issue](https://github.com/thejohnd0e/SimplestPrompt/issues) and include your browser, OS, the extension version and the website.
 
@@ -240,7 +233,7 @@ Selection prompt:
 
 ### Development checks
 
-No dependencies or build step are required. With Node.js installed, run `node --test tests/i18n.test.cjs` for localization and context-menu checks, and `node --check` on `background.js`, `sidepanel.js`, `content.js`, `crypto.js` and `i18n.js` for syntax checks.
+No dependencies or build step are required. With Node.js installed, run `node --test` for localization, context-menu and sync-connection checks, and `node --check` on `background.js`, `sidepanel.js`, `content.js`, `crypto.js` and `i18n.js` for syntax checks.
 
 For real-DOM panel checks, serve the repository locally (for example `python -m http.server 8765 --bind 127.0.0.1`) and open `http://127.0.0.1:8765/tests/panel.test.html`. This harness uses isolated test data and substitutes only the Chrome APIs; it does not access your installed extension's storage or contact GitHub. After a source change, reload the unpacked extension and manually check the actual page context menus and Gemini integration as well.
 
@@ -261,7 +254,7 @@ For real-DOM panel checks, serve the repository locally (for example `python -m 
 - Browser-internal pages (`chrome://`, `edge://`, `about:`) cannot be scripted.
 - Sites with restrictive security policies or custom editors may limit insertion; the prompt is then copied instead.
 - The context menu shows the first 25 folders and 30 prompts per folder (a Chrome menu limit); the rest are available in the side panel.
-- Sync is manual and needs a GitHub token with the `gist` scope.
+- Sync is optional, runs while the side panel is open, and needs a GitHub token with the `gist` scope.
 - A lost sync password cannot be recovered.
 
 ## License
