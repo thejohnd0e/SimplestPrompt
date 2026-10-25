@@ -27,12 +27,15 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
 ## Preview
 
 <p align="center">
-  <img src="assets/screenshot.png" width="380" alt="SimplestPrompt screenshot 1">
-  <img src="assets/screenshot-2.png" width="380" alt="SimplestPrompt screenshot 2">
+  <img src="assets/screenshot.png" width="380" alt="Prompts tab: folders and saved prompts with Copy buttons">
+  <img src="assets/screenshot-2.png" width="380" alt="AI on Selection tab: AI targets and selection prompts">
 </p>
 <p align="center">
-  <img src="assets/screenshot-3.png" width="380" alt="SimplestPrompt screenshot 3">
-  <img src="assets/screenshot-4.png" width="380" alt="SimplestPrompt screenshot 4">
+  <img src="assets/screenshot-3.png" width="380" alt="Right-click menu with your folders and prompts">
+  <img src="assets/screenshot-4.png" width="380" alt="Right-click menu: AI on Selection with prompts and AI targets">
+</p>
+<p align="center">
+  <img src="assets/screenshot-5.png" width="380" alt="Settings: language and automatic encrypted sync through a GitHub Gist">
 </p>
 
 ## Contents
