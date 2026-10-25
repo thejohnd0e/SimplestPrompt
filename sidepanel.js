@@ -817,7 +817,7 @@ function renderSyncStatus() {
   setSyncStatus('Ready', () => [
     tr('Gist: {id}', { id: syncState.gistId }),
     syncState.lastSyncAt ? tr('Last sync: {date}', { date: formatSyncDate(syncState.lastSyncAt) }) : tr('No successful sync yet.'),
-    tr('Works on its own, nothing to click. Syncs while this panel is open.')
+    tr('Works on its own, nothing to click. Changes from your other browsers arrive when you open this panel.')
   ].join('\n'));
 }
 
