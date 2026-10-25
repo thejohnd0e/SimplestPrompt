@@ -808,7 +808,7 @@ function renderSyncMessage() {
 }
 
 function renderSyncStatus() {
-  setTranslatedText('syncSaveConnection', syncReady() ? 'Update sync settings' : 'Enable syncing');
+  setTranslatedText('syncSaveConnection', syncReady() ? 'Update' : 'Enable syncing');
   document.getElementById('syncDisconnect').classList.toggle('hidden', !syncState.hasToken);
   if (!syncReady()) {
     setSyncStatus('Sync is not configured', 'Enter the Gist URL, token and password, then click Enable syncing.');

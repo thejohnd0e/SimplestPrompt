@@ -27,7 +27,7 @@ globalThis.I18n = (() => {
     'First browser': 'Первый браузер',
     'Another browser': 'Другой браузер',
     'Paste a Gist link, or leave empty': 'Вставьте ссылку на Gist или оставьте пустым',
-    'Update sync settings': 'Обновить настройки синхронизации',
+    'Update': 'Обновить',
     'That is not a Gist link. A Gist link looks like https://gist.github.com/your-name/0123abc… Leave the field empty to create a Gist automatically.': 'Это не ссылка на Gist. Ссылка на Gist выглядит так: https://gist.github.com/ваше-имя/0123abc… Оставьте поле пустым, чтобы Gist создался автоматически.',
     'Gist token': 'Токен GitHub',
     'Token with Gist permission': 'Токен с разрешением gist',
@@ -127,8 +127,8 @@ globalThis.I18n = (() => {
     'GitHub rejected the token. It may have expired. Create a new token and enter it above.': 'GitHub отклонил токен, возможно, срок его действия истёк. Создайте новый токен и введите его выше.',
     'The Gist was not found. Check the Gist URL.': 'Gist не найден. Проверьте ссылку на Gist.',
     'help.intro': {
-      en: 'Set it up once and forget it. Your prompts, folders and AI settings are saved to a secret GitHub Gist, encrypted, and kept up to date in all your browsers. Do the same setup in each browser, with the same Gist URL and password.',
-      ru: 'Настройте один раз и забудьте. Промпты, папки и настройки ИИ хранятся в секретном Gist на GitHub в зашифрованном виде и сами обновляются во всех ваших браузерах. В каждом браузере сделайте такую же настройку: тот же адрес Gist и тот же пароль.'
+      en: 'Your prompts, folders and AI settings are saved to a secret GitHub Gist, encrypted, and kept up to date in all your browsers. Do the same setup in each browser, with the same Gist URL and password.',
+      ru: 'Промпты, папки и настройки ИИ хранятся в секретном Gist на GitHub в зашифрованном виде и сами обновляются во всех ваших браузерах. В каждом браузере сделайте такую же настройку: тот же адрес Gist и тот же пароль.'
     },
     'help.url': {
       en: 'A Gist link looks like <strong>gist.github.com/your-name/…</strong> (not the token page). <a href="https://gist.github.com/" target="_blank" rel="noopener noreferrer">Create a secret Gist</a> and paste its link, or <strong>leave empty</strong> to create one automatically. In other browsers, paste the same link.',
