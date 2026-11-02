@@ -1137,49 +1137,6 @@ function loadDefaults() {
   saveAiConfig().then(loadAiConfig);
 }
 
-function exportAiConfig() {
-  const data = JSON.stringify({
-    aiOnSelectionEnabled,
-    aiTargets,
-    selectionPrompts
-  }, null, 2);
-  const blob = new Blob([data], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'ai-on-selection-' + new Date().toISOString().slice(0, 10) + '.json';
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function importAiConfig(file) {
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    try {
-      const raw = e.target.result;
-      const data = JSON.parse(raw);
-      if (!data || typeof data !== 'object') {
-        alert(tr('Invalid format: expected a JSON object.'));
-        return;
-      }
-      const nextEnabled = data.aiOnSelectionEnabled !== false;
-      const nextTargets = Array.isArray(data.aiTargets) ? normalizeImportedAiTargets(data.aiTargets) : [];
-      const nextPrompts = Array.isArray(data.selectionPrompts) ? normalizeImportedSelectionPrompts(data.selectionPrompts) : [];
-      aiOnSelectionEnabled = nextEnabled;
-      aiTargets = nextTargets;
-      selectionPrompts = nextPrompts;
-      await saveAiConfig();
-      loadAiConfig();
-      document.getElementById('aiImportFile').value = '';
-      alert(tr('AI on Selection import done. {targets} target(s), {prompts} prompt(s).', { targets: nextTargets.length, prompts: nextPrompts.length }));
-    } catch (err) {
-      alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
-    }
-  };
-  reader.readAsText(file);
-}
-
 async function loadAutoPasteState() {
   return new Promise((resolve) => {
     chrome.runtime.sendMessage({ action: 'getAutoPaste' }, (r) => {
@@ -1253,13 +1210,6 @@ document.getElementById('aiSelectionEnabled').addEventListener('change', (e) => 
 });
 
 document.getElementById('loadDefaults').addEventListener('click', loadDefaults);
-
-document.getElementById('aiExportBtn').addEventListener('click', exportAiConfig);
-document.getElementById('aiImportBtn').addEventListener('click', () => document.getElementById('aiImportFile').click());
-document.getElementById('aiImportFile').addEventListener('change', (e) => {
-  const f = e.target.files && e.target.files[0];
-  if (f) importAiConfig(f);
-});
 
 document.getElementById('tabPromptsBtn').addEventListener('click', () => setActiveTab('prompts'));
 document.getElementById('tabAiBtn').addEventListener('click', () => setActiveTab('ai'));

@@ -394,11 +394,8 @@
       </label>
       <input type="search" class="search-input" id="promptSearch" placeholder="Search prompts" data-i18n-placeholder="Search prompts" autocomplete="off" />
       <div class="toolbar-btns">
-        <button type="button" class="btn" id="exportBtn" data-i18n="Export">Export</button>
-        <button type="button" class="btn" id="importBtn" data-i18n="Import">Import</button>
         <button type="button" class="btn" id="addFolder" data-i18n="+ Folder">+ Folder</button>
         <button type="button" class="btn" id="addPrompt" data-i18n="+ Prompt">+ Prompt</button>
-        <input type="file" id="importFile" accept=".json,application/json" class="hidden" />
       </div>
     </div>
     <div class="layout">
@@ -421,11 +418,8 @@
         <span data-i18n="Enable AI on Selection">Enable AI on Selection</span>
       </label>
       <div class="toolbar-btns">
-        <button type="button" class="btn" id="aiExportBtn" data-i18n="Export">Export</button>
-        <button type="button" class="btn" id="aiImportBtn" data-i18n="Import">Import</button>
-        <input type="file" id="aiImportFile" accept=".json,application/json" class="hidden" />
+        <button type="button" class="btn" id="loadDefaults" data-i18n="Load default prompts &amp; targets">Load default prompts &amp; targets</button>
       </div>
-      <button type="button" class="btn" id="loadDefaults" data-i18n="Load default prompts &amp; targets">Load default prompts &amp; targets</button>
     </div>
     <div class="ai-content">
       <div class="section">
@@ -483,6 +477,13 @@
           <button type="button" class="btn" id="syncPush" data-i18n="Upload to Gist">Upload to Gist</button>
         </div>
       </details>
+      <h2 style="font-size: 16px; margin: 20px 0 12px;" data-i18n="Backup">Backup</h2>
+      <div class="sync-help" data-i18n="Export or import all local data: folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are never included. Importing replaces everything and disconnects syncing."></div>
+      <div class="sync-actions">
+        <button type="button" class="btn" id="exportBtn" data-i18n="Export">Export</button>
+        <button type="button" class="btn" id="importBtn" data-i18n="Import">Import</button>
+        <input type="file" id="importFile" accept=".json,application/json" class="hidden" />
+      </div>
     </div>
     <div class="hint"><span data-i18n="Your data stays local unless you enable syncing.">Your data stays local unless you enable syncing.</span><span></span></div>
   </div>

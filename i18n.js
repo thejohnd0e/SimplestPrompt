@@ -23,6 +23,8 @@ globalThis.I18n = (() => {
     'Selection Prompts': 'Промпты для выделенного текста',
     'Drag and drop selection prompts to reorder. Double-click to edit.': 'Перетаскивайте промпты для сортировки. Двойной щелчок — редактирование.',
     'Syncing': 'Синхронизация',
+    'Backup': 'Резервная копия',
+    'Export or import all local data: folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are never included. Importing replaces everything and disconnects syncing.': 'Экспорт и импорт всех локальных данных: папки и промпты, ИИ-сервисы, промпты для выделенного текста, переключатель ИИ и автовставка. Токен и пароль синхронизации в файл не попадают. Импорт заменяет все данные и отключает синхронизацию.',
     'How to set up sync': 'Как настроить синхронизацию',
     'First browser': 'Первый браузер',
     'Another browser': 'Другой браузер',
