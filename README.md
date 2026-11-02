@@ -77,8 +77,9 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
 
 - Save prompts in folders; reorder folders and prompts by drag-and-drop.
 - Double-click a card to edit it; delete from the edit dialog.
-- Export and import a full backup in one JSON file: folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are **never** included — a backup is a plain readable file, so keep it somewhere private.
-- Old exports (a plain array of folders) still import: they replace the folders only and leave the AI settings untouched.
+- **Settings → Backup** holds one pair of **Export / Import** buttons: a full backup in one JSON file with folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are **never** included — a backup is a plain readable file, so keep it somewhere private.
+- Importing **replaces all local data** and **disconnects syncing**: a backup is a new setup, so the Gist, token and password are forgotten and the sync block goes back to *Sync is not configured*. Reconnect the same Gist to keep syncing.
+- Files from older versions still import: a plain array of folders replaces the folders only, and an old AI on Selection file replaces the AI settings only.
 - The context menu rebuilds automatically after every change.
 
 ### Auto-paste
@@ -93,7 +94,7 @@ A separate context menu that appears only when text is selected: `AI on Selectio
 - **AI targets** open in a new tab. The text is passed either through a URL query parameter or, where that is not possible, pasted into the AI's input box.
 - Built-in targets: **ChatGPT, Claude, Grok, Gemini, Perplexity**. Add any other AI with its URL.
 - Built-in prompts include Translate, Summarize, Key takeaways, Rewrite simpler, Improve clarity, Explain like I'm 5, Pros and cons and more. Edit or add your own.
-- On the **AI on Selection** tab you can switch the menu on or off and import/export targets and prompts.
+- On the **AI on Selection** tab you can switch the menu on or off and restore the default prompts and targets.
 
 ### Sync
 
@@ -151,6 +152,7 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 | My prompts disappeared after switching folders | A different folder means a different install with empty data. Import your JSON backup or use sync. |
 | The extension disappeared from `chrome://extensions` | Chrome lost the folder the extension was loaded from: moving, renaming or deleting it removes the unpacked extension and its data cannot be reached from the old path. Unzip the release into a folder you will keep, use **Load unpacked** again, then import your backup or set up sync. |
 | The backup does not contain my sync token or password | By design: they are never exported, because the backup is a plain readable file. After a reinstall enter the Gist URL, a token and the same sync password, then click **Enable syncing** — the encrypted data comes back from the Gist. |
+| Syncing is off after importing a backup | By design: an import is a new setup, so the previous Gist, token and password are dropped and nothing is uploaded or downloaded silently. Enter the Gist URL, a token and the same sync password, then click **Enable syncing**. |
 | Sync stopped with an error | Read the status box under **Settings → Syncing**. An expired token is the most common cause: create a new token, paste it into **Gist token** and click **Enable syncing**. |
 
 Still stuck? [Open an issue](https://github.com/thejohnd0e/SimplestPrompt/issues) and include your browser, OS, the extension version and the website.
@@ -169,7 +171,7 @@ Stored in `chrome.storage.local`:
 | `syncConfig` | Local token and Gist metadata; **never** part of the sync payload |
 | `language` | Local interface language (`en` or `ru`); **never** synced or exported |
 
-The first five keys form the encrypted sync payload. The same five keys are written to the export file, inside an object with `format`, `version` and `exportedAt`; `syncConfig` and `language` are never exported.
+The first five keys form the encrypted sync payload. The same five keys are written to the export file, inside an object with `format`, `version` and `exportedAt`; `syncConfig` and `language` are never exported, and importing a backup clears `syncConfig`.
 
 <details>
 <summary>Examples</summary>
