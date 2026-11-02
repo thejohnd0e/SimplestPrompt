@@ -766,8 +766,10 @@ function importFromJson(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = async (e) => {
+    let parsed = false;
     try {
       const payload = parseImportPayload(e.target.result);
+      parsed = true;
       // A backup is a new setup: drop the old sync connection BEFORE writing, so the
       // auto-sync debounce cannot upload the restored data into the previous Gist.
       await disconnectSync();
@@ -775,7 +777,10 @@ function importFromJson(file) {
       document.getElementById('importFile').value = '';
       alert(describeImportResult(payload));
     } catch (err) {
-      alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
+      // Only a parse failure means "bad file"; anything after it is an operation failure.
+      alert(parsed
+        ? tr('Operation failed. Detail: {detail}', { detail: I18n.errorMessage(err) })
+        : tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
     }
   };
   reader.readAsText(file);

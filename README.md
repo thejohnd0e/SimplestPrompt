@@ -78,7 +78,7 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
 - Save prompts in folders; reorder folders and prompts by drag-and-drop.
 - Double-click a card to edit it; delete from the edit dialog.
 - **Settings → Backup** holds one pair of **Export / Import** buttons: a full backup in one JSON file with folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are **never** included — a backup is a plain readable file, so keep it somewhere private.
-- Importing **replaces all local data** and **disconnects syncing**: a backup is a new setup, so the Gist, token and password are forgotten and the sync block goes back to *Sync is not configured*. Reconnect the same Gist to keep syncing.
+- Importing **replaces all local data** and **disconnects syncing**: a backup is a new setup, so the Gist, token and password are forgotten and the sync block goes back to *Sync is not configured*. To keep syncing, reconnect the same Gist and click **Enable syncing**; when the panel asks which version to keep, choose the local one to upload the restored backup.
 - Files from older versions still import: a plain array of folders replaces the folders only, and an old AI on Selection file replaces the AI settings only.
 - The context menu rebuilds automatically after every change.
 
@@ -152,7 +152,7 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 | My prompts disappeared after switching folders | A different folder means a different install with empty data. Import your JSON backup or use sync. |
 | The extension disappeared from `chrome://extensions` | Chrome lost the folder the extension was loaded from: moving, renaming or deleting it removes the unpacked extension and its data cannot be reached from the old path. Unzip the release into a folder you will keep, use **Load unpacked** again, then import your backup or set up sync. |
 | The backup does not contain my sync token or password | By design: they are never exported, because the backup is a plain readable file. After a reinstall enter the Gist URL, a token and the same sync password, then click **Enable syncing** — the encrypted data comes back from the Gist. |
-| Syncing is off after importing a backup | By design: an import is a new setup, so the previous Gist, token and password are dropped and nothing is uploaded or downloaded silently. Enter the Gist URL, a token and the same sync password, then click **Enable syncing**. |
+| Syncing is off after importing a backup | By design: an import is a new setup, so the previous Gist, token and password are dropped and nothing is uploaded or downloaded silently. Enter the Gist URL, a token and the same sync password, click **Enable syncing**, then choose **Use local** to upload the restored backup. |
 | Sync stopped with an error | Read the status box under **Settings → Syncing**. An expired token is the most common cause: create a new token, paste it into **Gist token** and click **Enable syncing**. |
 
 Still stuck? [Open an issue](https://github.com/thejohnd0e/SimplestPrompt/issues) and include your browser, OS, the extension version and the website.
