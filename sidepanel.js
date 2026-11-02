@@ -15,6 +15,9 @@ let lastSyncStatus = null;
 let syncConflictError = null;
 let syncGistDraftDirty = false;
 const SYNC_DATA_KEYS = ['folders', 'autoPaste', 'aiOnSelectionEnabled', 'aiTargets', 'selectionPrompts'];
+// Export envelope. Secret sync config (token, passphrase) is never included.
+const EXPORT_FORMAT = 'simplestprompt';
+const EXPORT_VERSION = 2;
 const SYNC_DEBOUNCE_MS = 3000;
 const SYNC_POLL_MS = 5 * 60 * 1000;
 let syncRunning = false;
@@ -662,15 +665,83 @@ function deleteSelectionPromptFromModal() {
   saveAiConfig().then(loadAiConfig);
 }
 
-function exportToJson() {
-  const data = JSON.stringify(folders, null, 2);
-  const blob = new Blob([data], { type: 'application/json' });
+async function exportToJson() {
+  // Full local backup: prompts, AI on Selection settings and auto-paste state.
+  // The sync token and passphrase live in syncConfig and are never exported.
+  const data = await getSyncData();
+  const payload = {
+    format: EXPORT_FORMAT,
+    version: EXPORT_VERSION,
+    exportedAt: new Date().toISOString(),
+    folders: data.folders,
+    autoPaste: data.autoPaste,
+    aiOnSelectionEnabled: data.aiOnSelectionEnabled,
+    aiTargets: data.aiTargets,
+    selectionPrompts: data.selectionPrompts
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = 'rcp-prompts-' + new Date().toISOString().slice(0, 10) + '.json';
+  a.download = 'simplestprompt-backup-' + new Date().toISOString().slice(0, 10) + '.json';
   a.click();
   URL.revokeObjectURL(url);
+}
+
+function normalizeImportedFolders(list) {
+  return list.filter(f => f && typeof f === 'object').map(f => ({
+    id: f.id || uuid(),
+    name: f.name || tr('Imported'),
+    prompts: Array.isArray(f.prompts) ? f.prompts.filter(p => p && typeof p === 'object').map(p => ({
+      id: p.id || uuid(),
+      title: p.title || tr('Untitled'),
+      text: p.text || '',
+      timestamp: p.timestamp || new Date().toISOString()
+    })) : []
+  }));
+}
+
+function normalizeImportedAiTargets(list) {
+  return list.filter(t => t && typeof t === 'object').map(t => ({
+    id: t.id || uuid(),
+    name: t.name || tr('AI'),
+    baseUrl: t.baseUrl || '',
+    queryParam: t.queryParam != null ? t.queryParam : 'q=',
+    usePasteFallback: !!t.usePasteFallback
+  }));
+}
+
+function normalizeImportedSelectionPrompts(list) {
+  return list.filter(p => p && typeof p === 'object').map(p => ({
+    id: p.id || uuid(),
+    name: p.name || tr('Selection prompt'),
+    template: p.template || '',
+    timestamp: p.timestamp || new Date().toISOString()
+  }));
+}
+
+// Accepts a full export object or a legacy folders-only array.
+// Only the keys present in the file are returned, so a legacy import cannot wipe AI settings.
+function parseImportPayload(raw) {
+  const data = JSON.parse(raw);
+  if (Array.isArray(data)) return { folders: normalizeImportedFolders(data) };
+  if (!data || typeof data !== 'object' || !Array.isArray(data.folders)) {
+    throw new Error('Invalid format: expected a folder array or an export made by this extension.');
+  }
+  const payload = { folders: normalizeImportedFolders(data.folders) };
+  if (typeof data.autoPaste === 'boolean') payload.autoPaste = data.autoPaste;
+  if (typeof data.aiOnSelectionEnabled === 'boolean') payload.aiOnSelectionEnabled = data.aiOnSelectionEnabled;
+  if (Array.isArray(data.aiTargets)) payload.aiTargets = normalizeImportedAiTargets(data.aiTargets);
+  if (Array.isArray(data.selectionPrompts)) payload.selectionPrompts = normalizeImportedSelectionPrompts(data.selectionPrompts);
+  return payload;
+}
+
+async function applyImportPayload(payload) {
+  if (!payload.folders.some(f => f.id === selectedFolderId)) selectedFolderId = null;
+  await chrome.storage.local.set(payload);
+  await loadFolders();
+  if ('aiTargets' in payload || 'selectionPrompts' in payload || 'aiOnSelectionEnabled' in payload) await loadAiConfig();
+  if ('autoPaste' in payload) document.getElementById('autoPaste').checked = payload.autoPaste;
 }
 
 function importFromJson(file) {
@@ -678,27 +749,18 @@ function importFromJson(file) {
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
-      const raw = e.target.result;
-      const data = JSON.parse(raw);
-      if (!Array.isArray(data)) {
-        alert(tr('Invalid format: expected a JSON array of folders.'));
-        return;
-      }
-      const next = data.map(f => ({
-        id: f.id || uuid(),
-        name: f.name || tr('Imported'),
-        prompts: Array.isArray(f.prompts) ? f.prompts.map(p => ({
-          id: p.id || uuid(),
-          title: p.title || tr('Untitled'),
-          text: p.text || '',
-          timestamp: p.timestamp || new Date().toISOString()
-        })) : []
-      }));
-      folders = next;
-      await saveFolders();
-      loadFolders();
+      const payload = parseImportPayload(e.target.result);
+      await applyImportPayload(payload);
       document.getElementById('importFile').value = '';
-      alert(tr('Import done. {count} folder(s) loaded.', { count: next.length }));
+      if ('aiTargets' in payload || 'selectionPrompts' in payload) {
+        alert(tr('Import done. {folders} folder(s), {targets} AI target(s), {prompts} selection prompt(s) loaded.', {
+          folders: payload.folders.length,
+          targets: (payload.aiTargets || []).length,
+          prompts: (payload.selectionPrompts || []).length
+        }));
+      } else {
+        alert(tr('Import done. {count} folder(s) loaded.', { count: payload.folders.length }));
+      }
     } catch (err) {
       alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
     }
@@ -1089,19 +1151,8 @@ function importAiConfig(file) {
         return;
       }
       const nextEnabled = data.aiOnSelectionEnabled !== false;
-      const nextTargets = Array.isArray(data.aiTargets) ? data.aiTargets.map(t => ({
-        id: t.id || uuid(),
-        name: t.name || tr('AI'),
-        baseUrl: t.baseUrl || '',
-        queryParam: t.queryParam != null ? t.queryParam : 'q=',
-        usePasteFallback: !!t.usePasteFallback
-      })) : [];
-      const nextPrompts = Array.isArray(data.selectionPrompts) ? data.selectionPrompts.map(p => ({
-        id: p.id || uuid(),
-        name: p.name || tr('Selection prompt'),
-        template: p.template || '',
-        timestamp: p.timestamp || new Date().toISOString()
-      })) : [];
+      const nextTargets = Array.isArray(data.aiTargets) ? normalizeImportedAiTargets(data.aiTargets) : [];
+      const nextPrompts = Array.isArray(data.selectionPrompts) ? normalizeImportedSelectionPrompts(data.selectionPrompts) : [];
       aiOnSelectionEnabled = nextEnabled;
       aiTargets = nextTargets;
       selectionPrompts = nextPrompts;

@@ -60,7 +60,7 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
 
 **Updating:** download the new release, unzip it over the same folder, then click **Reload** on the extension's card in `chrome://extensions`. Your prompts and settings stay, as long as you keep using the same folder.
 
-> **Tip:** Chrome keeps your data per extension install. If you load the extension from a different folder, it is treated as a new install with empty data. Use **Export** (or [sync](#-sync-between-browsers)) to move your data.
+> **Tip:** Chrome ties an unpacked extension to the exact folder it was loaded from, and keeps your data per install. If that folder is moved, renamed or deleted, Chrome removes the extension on the next start and the old data becomes unreachable; loading the extension from a new folder is a new install with empty data. So **Export** or [sync](#-sync-between-browsers) first, then load the extension from a folder you will keep.
 
 ## Quick start
 
@@ -77,7 +77,8 @@ Good for quick translations, rewriting posts, summarizing articles, analyzing co
 
 - Save prompts in folders; reorder folders and prompts by drag-and-drop.
 - Double-click a card to edit it; delete from the edit dialog.
-- Import and export everything as one JSON file.
+- Export and import a full backup in one JSON file: folders and prompts, AI targets, selection prompts, the AI on Selection switch and the auto-paste setting. The sync token and password are **never** included — a backup is a plain readable file, so keep it somewhere private.
+- Old exports (a plain array of folders) still import: they replace the folders only and leave the AI settings untouched.
 - The context menu rebuilds automatically after every change.
 
 ### Auto-paste
@@ -147,7 +148,9 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 | The prompt is only copied, not pasted ("Copied") | Turn on **Auto-paste into focused field** in the side panel. Click inside the input field first, then use the right-click menu. |
 | No menu appears | Reload the extension in `chrome://extensions`. Browser pages (`chrome://…`) are not supported. |
 | Version did not change after updating | Click **Reload** on the extension card and check **Source** in the card's Details. Reload only re-reads the folder the extension was loaded from. |
-| My prompts disappeared after switching folders | A different folder means a different install with empty data. Import your JSON export or use sync. |
+| My prompts disappeared after switching folders | A different folder means a different install with empty data. Import your JSON backup or use sync. |
+| The extension disappeared from `chrome://extensions` | Chrome lost the folder the extension was loaded from: moving, renaming or deleting it removes the unpacked extension and its data cannot be reached from the old path. Unzip the release into a folder you will keep, use **Load unpacked** again, then import your backup or set up sync. |
+| The backup does not contain my sync token or password | By design: they are never exported, because the backup is a plain readable file. After a reinstall enter the Gist URL, a token and the same sync password, then click **Enable syncing** — the encrypted data comes back from the Gist. |
 | Sync stopped with an error | Read the status box under **Settings → Syncing**. An expired token is the most common cause: create a new token, paste it into **Gist token** and click **Enable syncing**. |
 
 Still stuck? [Open an issue](https://github.com/thejohnd0e/SimplestPrompt/issues) and include your browser, OS, the extension version and the website.
@@ -166,7 +169,7 @@ Stored in `chrome.storage.local`:
 | `syncConfig` | Local token and Gist metadata; **never** part of the sync payload |
 | `language` | Local interface language (`en` or `ru`); **never** synced or exported |
 
-The first five keys form the encrypted sync payload.
+The first five keys form the encrypted sync payload. The same five keys are written to the export file, inside an object with `format`, `version` and `exportedAt`; `syncConfig` and `language` are never exported.
 
 <details>
 <summary>Examples</summary>
