@@ -85,6 +85,7 @@ globalThis.I18n = (() => {
     'Invalid format: expected a JSON object.': 'Неверный формат: ожидался JSON-объект.',
     'Import done. {count} folder(s) loaded.': 'Импорт завершён. Загружено папок: {count}.',
     'Import done. {folders} folder(s), {targets} AI target(s), {prompts} selection prompt(s) loaded.': 'Импорт завершён. Папок: {folders}, ИИ-сервисов: {targets}, промптов для выделенного текста: {prompts}.',
+    'Sync is disconnected. Set it up again if you need it.': 'Синхронизация отключена. Настройте её заново, если она нужна.',
     'AI on Selection import done. {targets} target(s), {prompts} prompt(s).': 'Импорт настроек ИИ завершён. Сервисов: {targets}, промптов: {prompts}.',
     'Invalid JSON or format: {detail}': 'Некорректный JSON или формат: {detail}',
     'Detail: {detail}': 'Подробности: {detail}',

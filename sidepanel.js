@@ -746,23 +746,34 @@ async function applyImportPayload(payload) {
   if ('autoPaste' in payload) document.getElementById('autoPaste').checked = payload.autoPaste;
 }
 
+function describeImportResult(payload) {
+  const targets = (payload.aiTargets || []).length;
+  const prompts = (payload.selectionPrompts || []).length;
+  let message;
+  if (payload.folders && ('aiTargets' in payload || 'selectionPrompts' in payload)) {
+    message = tr('Import done. {folders} folder(s), {targets} AI target(s), {prompts} selection prompt(s) loaded.', {
+      folders: payload.folders.length, targets, prompts
+    });
+  } else if (payload.folders) {
+    message = tr('Import done. {count} folder(s) loaded.', { count: payload.folders.length });
+  } else {
+    message = tr('AI on Selection import done. {targets} target(s), {prompts} prompt(s).', { targets, prompts });
+  }
+  return message + ' ' + tr('Sync is disconnected. Set it up again if you need it.');
+}
+
 function importFromJson(file) {
   if (!file) return;
   const reader = new FileReader();
   reader.onload = async (e) => {
     try {
       const payload = parseImportPayload(e.target.result);
+      // A backup is a new setup: drop the old sync connection BEFORE writing, so the
+      // auto-sync debounce cannot upload the restored data into the previous Gist.
+      await disconnectSync();
       await applyImportPayload(payload);
       document.getElementById('importFile').value = '';
-      if ('aiTargets' in payload || 'selectionPrompts' in payload) {
-        alert(tr('Import done. {folders} folder(s), {targets} AI target(s), {prompts} selection prompt(s) loaded.', {
-          folders: payload.folders.length,
-          targets: (payload.aiTargets || []).length,
-          prompts: (payload.selectionPrompts || []).length
-        }));
-      } else {
-        alert(tr('Import done. {count} folder(s) loaded.', { count: payload.folders.length }));
-      }
+      alert(describeImportResult(payload));
     } catch (err) {
       alert(tr('Invalid JSON or format: {detail}', { detail: I18n.errorMessage(err) }));
     }
