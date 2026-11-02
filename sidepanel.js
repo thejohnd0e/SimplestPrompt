@@ -720,26 +720,28 @@ function normalizeImportedSelectionPrompts(list) {
   }));
 }
 
-// Accepts a full export object or a legacy folders-only array.
-// Only the keys present in the file are returned, so a legacy import cannot wipe AI settings.
+// Accepts a full export object, a legacy folders-only array, or a legacy AI-only config file.
+// Only the keys present in the file are returned, so a partial import cannot wipe what it does not carry.
+const IMPORT_FORMAT_ERROR = 'Invalid format: expected a folder array or an export made by this extension.';
+
 function parseImportPayload(raw) {
   const data = JSON.parse(raw);
   if (Array.isArray(data)) return { folders: normalizeImportedFolders(data) };
-  if (!data || typeof data !== 'object' || !Array.isArray(data.folders)) {
-    throw new Error('Invalid format: expected a folder array or an export made by this extension.');
-  }
-  const payload = { folders: normalizeImportedFolders(data.folders) };
+  if (!data || typeof data !== 'object') throw new Error(IMPORT_FORMAT_ERROR);
+  const payload = {};
+  if (Array.isArray(data.folders)) payload.folders = normalizeImportedFolders(data.folders);
   if (typeof data.autoPaste === 'boolean') payload.autoPaste = data.autoPaste;
   if (typeof data.aiOnSelectionEnabled === 'boolean') payload.aiOnSelectionEnabled = data.aiOnSelectionEnabled;
   if (Array.isArray(data.aiTargets)) payload.aiTargets = normalizeImportedAiTargets(data.aiTargets);
   if (Array.isArray(data.selectionPrompts)) payload.selectionPrompts = normalizeImportedSelectionPrompts(data.selectionPrompts);
+  if (Object.keys(payload).length === 0) throw new Error(IMPORT_FORMAT_ERROR);
   return payload;
 }
 
 async function applyImportPayload(payload) {
-  if (!payload.folders.some(f => f.id === selectedFolderId)) selectedFolderId = null;
+  if (payload.folders && !payload.folders.some(f => f.id === selectedFolderId)) selectedFolderId = null;
   await chrome.storage.local.set(payload);
-  await loadFolders();
+  if (payload.folders) await loadFolders();
   if ('aiTargets' in payload || 'selectionPrompts' in payload || 'aiOnSelectionEnabled' in payload) await loadAiConfig();
   if ('autoPaste' in payload) document.getElementById('autoPaste').checked = payload.autoPaste;
 }
