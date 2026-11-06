@@ -3,6 +3,11 @@
 importScripts('i18n.js');
 const tr = I18n.t;
 
+// Content scripts do not need access to prompts or stored sync credentials.
+if (chrome.storage.local.setAccessLevel) {
+  chrome.storage.local.setAccessLevel({ accessLevel: 'TRUSTED_CONTEXTS' }).catch(console.error);
+}
+
 const MENU_ROOT = 'rcp_root';
 const AI_MENU_ROOT = 'ai_selection_root';
 // Explicit page contexts keep prompt menus out of the extension icon menu.
@@ -642,14 +647,29 @@ async function handleAiOnSelectionClick(promptId, targetId, selectionText) {
 
   const composed = applySelectionTemplate(prompt.template || '', selectionText || '');
   const usePasteFallback = !!target.usePasteFallback;
-  const baseUrl = target.baseUrl || '';
+  const baseUrl = String(target.baseUrl || '').trim();
+
+  try {
+    if (new URL(baseUrl).protocol !== 'https:') throw new Error('HTTPS required');
+  } catch (e) {
+    showToast('AI target must use a valid HTTPS address. Edit it in the panel.');
+    return;
+  }
 
   if (usePasteFallback) {
     await copyToClipboard(composed);
-    const tab = await chrome.tabs.create({ url: baseUrl, active: true });
+    let parsedUrl = null;
+    try {
+      parsedUrl = baseUrl ? new URL(baseUrl) : null;
+    } catch (e) {}
+    if (!parsedUrl || !/^https?:$/i.test(parsedUrl.protocol)) {
+      showToast('Copied! Paste with Ctrl+V');
+      return;
+    }
+    const tab = await chrome.tabs.create({ url: parsedUrl.toString(), active: true });
     if (!tab || !tab.id) return;
     await waitForTabComplete(tab.id, 15000);
-    const isGemini = /(^|\.)gemini\.google\.com$/i.test((new URL(baseUrl)).hostname || '');
+    const isGemini = /(^|\.)gemini\.google\.com$/i.test(parsedUrl.hostname || '');
     if (isGemini) {
       const injected = await sendMessageWithRetry(tab.id, { action: 'injectGemini', text: composed }, 8, 600);
       showToast(injected ? 'Pasted!' : 'Copied! Paste with Ctrl+V');
@@ -662,7 +682,12 @@ async function handleAiOnSelectionClick(promptId, targetId, selectionText) {
 
   const url = buildTargetUrl(baseUrl, target.queryParam || 'q=', composed);
   if (!url) return;
-  await chrome.tabs.create({ url, active: true });
+  let parsedTargetUrl = null;
+  try {
+    parsedTargetUrl = new URL(url);
+  } catch (e) {}
+  if (!parsedTargetUrl || !/^https?:$/i.test(parsedTargetUrl.protocol)) return;
+  await chrome.tabs.create({ url: parsedTargetUrl.toString(), active: true });
 }
 
 function sendMessageWithRetry(tabId, message, attempts, delayMs) {
@@ -835,6 +860,11 @@ chrome.contextMenus.onClicked.addListener(async (info, tab) => {
 });
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && typeof msg.action === 'string' && msg.action.startsWith('sync') &&
+      (!sender || sender.id !== chrome.runtime.id || sender.url !== chrome.runtime.getURL('sidepanel.html'))) {
+    sendResponse({ success: false, error: 'Unauthorized sender.' });
+    return true;
+  }
   if (msg.action === 'getFolders') {
     getFolders().then(f => sendResponse({ folders: f }));
     return true;

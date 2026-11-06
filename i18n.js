@@ -77,6 +77,8 @@ globalThis.I18n = (() => {
     'Edit AI target': 'Редактирование ИИ-сервиса',
     'Name': 'Название',
     'Base URL (https://...)': 'Адрес сервиса (https://...)',
+    'AI target must use a valid HTTPS address. Edit it in the panel.': 'Для ИИ-сервиса нужен корректный адрес HTTPS. Измените его в панели.',
+    'Prompts are stored locally. AI on Selection sends text to your chosen service; optional sync sends encrypted data to GitHub.': 'Промпты хранятся локально. ИИ для выделенного текста передаёт текст выбранному сервису; необязательная синхронизация отправляет зашифрованные данные в GitHub.',
     'Query param (q=)': 'Параметр запроса (q=)',
     'Use paste fallback': 'Использовать вставку текста',
     'New selection prompt': 'Новый промпт для выделенного текста',

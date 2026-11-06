@@ -20,7 +20,7 @@ Stop copying and pasting the same prompts into ChatGPT, Claude, Grok, Gemini and
 
 - **Select text → right-click → pick a prompt → pick an AI.** The AI opens with your text already inserted.
 - **Save your favorite prompts** in folders. They live in the right-click menu: one click to copy or auto-paste anywhere.
-- **Everything stays on your computer** by default. Optional [encrypted sync](#-sync-between-browsers) between browsers is available when you want it.
+- **Prompts are stored locally** by default. Optional [encrypted sync](#-sync-between-browsers) is available; AI on Selection sends your chosen text to the selected AI service.
 
 Good for quick translations, rewriting posts, summarizing articles, analyzing comments, improving your own text — all in one right-click.
 
@@ -85,6 +85,7 @@ A separate context menu that appears only when text is selected: `AI on Selectio
 
 - **Selection prompts** are templates; `{{text}}` is replaced with your selected text.
 - **AI targets** open in a new tab. The text is passed either through a URL query parameter or, where that is not possible, pasted into the AI's input box.
+- Targets must use HTTPS. Older HTTP targets remain saved but cannot be opened until edited. URL parameters may be stored in browser history or service logs; clipboard contents may be accessible to other applications.
 - Built-in targets: **ChatGPT, Claude, Grok, Gemini, Perplexity**. Add any other AI with its URL.
 - Built-in prompts include Translate, Summarize, Key takeaways, Rewrite simpler, Improve clarity, Explain like I'm 5, Pros and cons and more. Edit or add your own.
 - On the **AI on Selection** tab you can switch the menu on or off and restore the default prompts and targets.
@@ -99,7 +100,7 @@ Open **Settings** (the gear button) and use **Language** at the top to choose **
 
 ## 🔄 Sync between browsers
 
-Keep the same prompts on every computer or browser profile. Sync is **optional**: until you enable it, your data never leaves the browser. Once enabled it runs **automatically** while the side panel is open: changes are uploaded a few seconds after you make them, and the Gist is checked when the panel opens and every few minutes.
+Keep the same prompts on every computer or browser profile. Sync is **optional**; independently, AI on Selection sends text to the AI service you choose. Once sync is enabled it runs **automatically** while the side panel is open: changes are uploaded a few seconds after you make them, and the Gist is checked when the panel opens and every few minutes.
 
 **What is synced:** your prompts and folders, AI targets, selection prompts, the AI on Selection switch, and the auto-paste setting.
 **What is never synced:** your GitHub token, your password, the sync settings, and the interface language.
@@ -130,8 +131,8 @@ Enter the **same Gist URL**, your token and the **same password**, then click **
 
 ### Security
 
-- Your data is encrypted in the browser with **AES-GCM**, using a key derived from your password with **PBKDF2-SHA-256**, before it is sent. GitHub only receives the encrypted file `simplestprompt-data.json` (plus salt, IV and algorithm info), never your prompts, token or password.
-- The **token and the password are saved locally** in the extension (`chrome.storage.local`) so syncing keeps working after a restart. They are never uploaded, exported or exposed to web pages. Anyone with access to your browser profile can read them.
+- Your data is encrypted in the browser with **AES-GCM**, using a key derived from your password with **PBKDF2-SHA-256**, before it is sent. GitHub receives the encrypted file `simplestprompt-data.json` and your token in the authorization header, but not the plaintext prompts or sync password.
+- The **token and the password are saved locally** in the extension (`chrome.storage.local`) so syncing keeps working after a restart. Neither is included in the Gist file or exported; the token is sent to GitHub for authentication. Anyone with access to your browser profile can read them.
 - If you lose the password, nobody (including you and GitHub) can recover the encrypted copy.
 - A secret Gist is unlisted, not access-restricted: anyone with the link can view the encrypted file. Use a strong password.
 

@@ -158,7 +158,7 @@ function createPromptCard(prompt, folder, showFolderName) {
     ${showFolderName ? `<div class="folder-name">${escapeHtml(folder.name || tr('Unnamed'))}</div>` : ''}
     <div class="text">${escapeHtml((prompt.text || '').slice(0, 120))}${(prompt.text || '').length > 120 ? '…' : ''}</div>
     <div class="actions">
-      <button type="button" class="btn" data-action="copy" data-id="${prompt.id}">${tr('Copy')}</button>
+      <button type="button" class="btn" data-action="copy" data-id="${escapeHtml(prompt.id)}">${tr('Copy')}</button>
     </div>
   `;
   card.addEventListener('dblclick', (e) => {
@@ -220,9 +220,12 @@ function renderPrompts() {
 }
 
 function escapeHtml(s) {
-  const div = document.createElement('div');
-  div.textContent = s;
-  return div.innerHTML;
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 function uuid() {
@@ -237,7 +240,7 @@ async function copyPrompt(promptId) {
   if (!location) return;
   try {
     await navigator.clipboard.writeText(location.prompt.text || '');
-    const btn = document.querySelector(`button[data-action="copy"][data-id="${promptId}"]`);
+    const btn = Array.from(document.querySelectorAll('button[data-action="copy"]')).find(el => el.dataset.id === promptId);
     if (btn) { btn.textContent = tr('Copied!'); setTimeout(() => { btn.textContent = tr('Copy'); }, 1500); }
   } catch (e) {
     console.error(e);
@@ -383,7 +386,7 @@ function renderAiTargets() {
       <div class="meta">${escapeHtml(t.baseUrl || '')}</div>
       <div class="meta">${tr('Query:')} ${escapeHtml(queryLabel)}${t.usePasteFallback ? tr(' · paste fallback') : ''}</div>
       <div class="actions">
-        <button type="button" class="btn" data-action="edit-target" data-id="${t.id}">${tr('Edit')}</button>
+        <button type="button" class="btn" data-action="edit-target" data-id="${escapeHtml(t.id)}">${tr('Edit')}</button>
       </div>
     `;
     card.addEventListener('dblclick', () => openEditAiTargetModal(t.id));
@@ -409,7 +412,7 @@ function renderSelectionPrompts() {
       <div class="title">${escapeHtml(p.name || tr('Untitled'))}</div>
       <div class="meta">${escapeHtml(preview)}${(p.template || '').length > 120 ? '…' : ''}</div>
       <div class="actions">
-        <button type="button" class="btn" data-action="edit-selection" data-id="${p.id}">${tr('Edit')}</button>
+        <button type="button" class="btn" data-action="edit-selection" data-id="${escapeHtml(p.id)}">${tr('Edit')}</button>
       </div>
     `;
     card.addEventListener('dblclick', () => openEditSelectionPromptModal(p.id));
@@ -539,6 +542,13 @@ function saveAiTargetFromModal() {
   const queryParam = document.getElementById('aiTargetQueryParam').value.trim();
   const usePasteFallback = document.getElementById('aiTargetUsePaste').checked;
   const editId = document.getElementById('saveAiTarget').dataset.editId;
+
+  try {
+    if (new URL(baseUrl).protocol !== 'https:') throw new Error('HTTPS required');
+  } catch (e) {
+    alert(tr('AI target must use a valid HTTPS address. Edit it in the panel.'));
+    return;
+  }
 
   if (editId) {
     const target = aiTargets.find(t => t.id === editId);
